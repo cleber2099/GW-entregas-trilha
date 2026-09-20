@@ -34,6 +34,15 @@ public class ProdutoController {
                 case 2:
                     listarProdutos();
                     break;
+                case 3:
+                    buscarInterativo();
+                    break;
+                case 4:
+                    editar();
+                break;
+                case 5:
+                    remover();
+                break;
                 case 0:
                     System.out.println("Voltando ao Menu Principal...");
                     break;
@@ -74,6 +83,46 @@ public class ProdutoController {
             }
         }
 
+        public Produto buscarPorCodigo(String codigo) {
+            for (Produto p : produtos) {
+                if (p.getCodigo().equalsIgnoreCase(codigo)) {
+                return p;
+                }
+            }
+            return null;
+        }
+private void buscarInterativo() {
+        System.out.print("Informe o código: ");
+        Produto produto = buscarPorCodigo(scanner.nextLine());
+        System.out.println(produto != null ? produto : "Produto não encontrado.");
+    }
+ 
+    private void editar() {
+        System.out.print("Código do produto a editar: ");
+        Produto produto = buscarPorCodigo(scanner.nextLine());
+        if (produto == null) {
+            System.out.println("Produto não encontrado.");
+            return;
+        }
+        System.out.print("Novo nome (" + produto.getNome() + "): ");
+        produto.setNome(scanner.nextLine());
+        System.out.print("Nova descrição (" + produto.getDescricao() + "): ");
+        produto.setDescricao(scanner.nextLine());
+        System.out.print("Novo preço (" + produto.getPreco() + "): ");
+        produto.setPreco(Double.parseDouble(scanner.nextLine().replace(",", ".")));
+        System.out.println("Produto atualizado com sucesso!");
+    }
+ 
+    private void remover() {
+        System.out.print("Código do produto a remover: ");
+        Produto produto = buscarPorCodigo(scanner.nextLine());
+        if (produto == null) {
+            System.out.println("Produto não encontrado.");
+            return;
+        }
+        produtos.remove(produto);
+        System.out.println("Produto removido com sucesso!");
+    }
    
 
 }
