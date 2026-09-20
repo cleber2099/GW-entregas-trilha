@@ -10,21 +10,20 @@ public class ProdutoController {
     private List<Produto> produtos = new ArrayList<>();
     Scanner scanner;
 
-    public ProdutoController() {
-        this.scanner = new Scanner(System.in);
+   public ProdutoController(Scanner scanner) {
+        this.scanner = scanner;
     }
 
     public void  menuProduto() {
         int opcao;
         do {
-            System.out.println(" Gerir Produtos");
+            System.out.println(" Menu Para Gerir Produtos");
             System.out.println("1. Cadastrar Produto");
             System.out.println("2. Listar Produtos");
             System.out.println("3. Buscar por Código");
             System.out.println("4. Editar Produto");
             System.out.println("5. Excluir Produto");
             System.out.println("0. Voltar ao Menu Principal");
-            System.out.println("-----*********-----");
             System.out.print("Escolha uma opção: ");
             opcao = scanner.nextInt();
             scanner.nextLine(); 
