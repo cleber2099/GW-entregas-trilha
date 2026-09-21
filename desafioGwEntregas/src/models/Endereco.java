@@ -64,7 +64,14 @@ public class Endereco {
     public void setBairro(String bairro) {
         this.bairro = bairro;
     }
-
+    public String formatar() {
+        return rua + ", " + numero + " - " + bairro + ", " + cidade + "/" + estado + " - CEP: " + cep;
+    }
+ 
+    @Override
+    public String toString() {
+        return formatar();
+    }
     
 
 }

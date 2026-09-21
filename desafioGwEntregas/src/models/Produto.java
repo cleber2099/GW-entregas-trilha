@@ -35,10 +35,6 @@ public class Produto {
         return preco;
     }
 
-    public void setPreco(double preco) {
-        this.preco = preco;
-    }
-
     public int getQuantidade() {
         return quantidade;
     }
@@ -55,7 +51,18 @@ public class Produto {
         this.codigo = codigo;
     }
 
-    
+      public void setPreco(double preco) {
+        if (preco < 0) {
+            throw new IllegalArgumentException("O preço não pode ser negativo.");
+        }
+        this.preco = preco;
+    }
+ 
+   
+    @Override
+    public String toString() {
+        return "Produto: " + nome + " (" + codigo + ") | Preço: R$" + String.format("%.2f", preco);
+    }
     
 
     
