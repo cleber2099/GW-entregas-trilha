@@ -4,14 +4,12 @@ public class Produto {
     private String nome;
     private String descricao;
     private double preco;
-    private int quantidade;
     private String codigo;
 
-    public Produto(String nome, String descricao, double preco, int quantidade, String codigo) {
+    public Produto(String nome, String descricao, double preco, String codigo) {
         this.nome = nome;
         this.descricao = descricao;
         this.preco = preco;
-        this.quantidade = quantidade;
         this.codigo = codigo;
     }
 
@@ -33,14 +31,6 @@ public class Produto {
 
     public double getPreco() {
         return preco;
-    }
-
-    public int getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(int quantidade) {
-        this.quantidade = quantidade;
     }
 
     public String getCodigo() {

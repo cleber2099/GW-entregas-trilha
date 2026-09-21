@@ -60,13 +60,11 @@ public class ProdutoController {
             String descricao = scanner.nextLine();
             System.out.print("Preço: ");
             double preco = scanner.nextDouble();
-            System.out.print("Quantidade: ");
-            int quantidade = scanner.nextInt();
             scanner.nextLine(); 
             System.out.print("Código: ");
             String codigo = scanner.nextLine();
 
-            Produto produto = new Produto(nome, descricao, preco, quantidade, codigo);
+            Produto produto = new Produto(nome, descricao, preco, codigo);
             produtos.add(produto);
             System.out.println("Produto cadastrado com sucesso!");
         }
@@ -78,7 +76,6 @@ public class ProdutoController {
                 System.out.println("Nome: " + produto.getNome());
                 System.out.println("Descrição: " + produto.getDescricao());
                 System.out.println("Preço: " + produto.getPreco());
-                System.out.println("Quantidade: " + produto.getQuantidade());
                 System.out.println("------------------------");
             }
         }
