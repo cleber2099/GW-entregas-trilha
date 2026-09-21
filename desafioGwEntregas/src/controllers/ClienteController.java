@@ -50,7 +50,7 @@ public class ClienteController {
         String telefone = scanner.nextLine();
         Endereco endereco = lerEndereco();
 
-        clientes.add(new Cliente(nome,endereco,cpf, telefone));
+        clientes.add(new Cliente(nome, endereco, telefone, cpf));
         System.out.println("Cliente cadastrado com sucesso!");
     }
 
@@ -89,7 +89,6 @@ public class ClienteController {
         }
         System.out.print("Novo nome (" + cliente.getNome() + "): ");
         cliente.setNome(scanner.nextLine());
- 
         System.out.print("Novo telefone (" + cliente.getTelefone() + "): ");
         cliente.setTelefone(scanner.nextLine());
         System.out.print("Deseja atualizar o endereço? (s/n): ");
@@ -123,6 +122,6 @@ public class ClienteController {
         String estado = scanner.nextLine();
         System.out.print("CEP: ");
         String cep = scanner.nextLine();
-        return new Endereco(rua, numero, bairro, cidade, estado, cep);
+        return new Endereco(rua, cidade, estado, cep, numero, bairro);
     }
 }

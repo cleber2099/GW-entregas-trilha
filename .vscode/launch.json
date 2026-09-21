@@ -10,7 +10,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "",
-            "console": "internalConsole"
+           // "console": "internalConsole"
 
         },
         {
