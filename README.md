@@ -49,8 +49,6 @@ javac $(find src -name "*.java")
 java -cp src App
 ```
 
-> No Windows, troque `:` por `;` no classpath (`bin;lib/*`).
-
 ### Pelo VS Code
 
 1. Abra a pasta do projeto no VS Code com a extensão *Extension Pack for Java* instalada.
