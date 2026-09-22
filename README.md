@@ -45,8 +45,8 @@ src/
 
 ```bash
 # a partir da raiz do projeto
-javac -d bin -cp "lib/*" src/**/*.java src/**/**/*.java
-java -cp "bin:lib/*" App
+javac $(find src -name "*.java")
+java -cp src App
 ```
 
 > No Windows, troque `:` por `;` no classpath (`bin;lib/*`).
