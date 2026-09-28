@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import util.Validador;
+
 public class Entrega {
 
     public enum Status {
@@ -24,7 +26,8 @@ public class Entrega {
     }
 
     public Entrega(String codigo, Cliente cliente, Endereco enderecoDestino) {
-        this.status = Status.PENDENTE; 
+        this.status = Status.PENDENTE;
+        setCodigo(codigo);
         setCliente(cliente);
         setEnderecoDestino(enderecoDestino);
     }
@@ -34,10 +37,7 @@ public class Entrega {
     }
 
     public void setCodigo(String codigo) {
-        if (codigo == null || codigo.trim().isEmpty()) {
-            System.out.println("Erro: O código da entrega é obrigatório.");
-            return;
-        }
+        Validador.exigirTexto(codigo, "O código da entrega é obrigatório.");
         this.codigo = codigo;
     }
 
@@ -46,10 +46,7 @@ public class Entrega {
     }
 
     public void setCliente(Cliente cliente) {
-        if (cliente == null) {
-            System.out.println("Erro: O cliente é obrigatório.");
-            return;
-        }
+        Validador.exigirNaoNulo(cliente, "O cliente é obrigatório.");
         if (!podeAlterar()) {
             return;
         }
@@ -61,10 +58,7 @@ public class Entrega {
     }
 
     public void setEnderecoDestino(Endereco enderecoDestino) {
-        if (enderecoDestino == null) {
-            System.out.println("Erro: O endereço de destino é obrigatório.");
-            return;
-        }
+        Validador.exigirNaoNulo(enderecoDestino, "O endereço de destino é obrigatório.");
         if (!podeAlterar()) {
             return;
         }
@@ -80,10 +74,7 @@ public class Entrega {
     }
 
     public void adicionarItem(Produto produto, int quantidade) {
-        if (produto == null) {
-            System.out.println("Erro: O produto é obrigatório.");
-            return;
-        }
+        Validador.exigirNaoNulo(produto, "O produto é obrigatório.");
         if (!podeAlterar()) {
             return;
         }

@@ -48,10 +48,14 @@ public class ClienteController {
         String cpf = scanner.nextLine();
         System.out.print("Telefone: ");
         String telefone = scanner.nextLine();
-        Endereco endereco = lerEndereco();
 
-        clientes.add(new Cliente(nome, endereco, telefone, cpf));
-        System.out.println("Cliente cadastrado com sucesso!");
+        try {
+            Endereco endereco = lerEndereco();
+            clientes.add(new Cliente(nome, endereco, telefone, cpf));
+            System.out.println("Cliente cadastrado com sucesso!");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
 
     private void listar() {
@@ -88,14 +92,22 @@ public class ClienteController {
             return;
         }
         System.out.print("Novo nome (" + cliente.getNome() + "): ");
-        cliente.setNome(scanner.nextLine());
+        String nome = scanner.nextLine();
         System.out.print("Novo telefone (" + cliente.getTelefone() + "): ");
-        cliente.setTelefone(scanner.nextLine());
+        String telefone = scanner.nextLine();
         System.out.print("Deseja atualizar o endereço? (s/n): ");
-        if (scanner.nextLine().equalsIgnoreCase("s")) {
-            cliente.setEndereco(lerEndereco());
+        boolean atualizarEndereco = scanner.nextLine().equalsIgnoreCase("s");
+
+        try {
+            cliente.setNome(nome);
+            cliente.setTelefone(telefone);
+            if (atualizarEndereco) {
+                cliente.setEndereco(lerEndereco());
+            }
+            System.out.println("Cliente atualizado com sucesso!");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro: " + e.getMessage());
         }
-        System.out.println("Cliente atualizado com sucesso!");
     }
 
     private void remover() {

@@ -60,13 +60,17 @@ public class ProdutoController {
             String descricao = scanner.nextLine();
             System.out.print("Preço: ");
             double preco = scanner.nextDouble();
-            scanner.nextLine(); 
+            scanner.nextLine();
             System.out.print("Código: ");
             String codigo = scanner.nextLine();
 
-            Produto produto = new Produto(nome, descricao, preco, codigo);
-            produtos.add(produto);
-            System.out.println("Produto cadastrado com sucesso!");
+            try {
+                Produto produto = new Produto(nome, descricao, preco, codigo);
+                produtos.add(produto);
+                System.out.println("Produto cadastrado com sucesso!");
+            } catch (IllegalArgumentException e) {
+                System.out.println("Erro: " + e.getMessage());
+            }
         }
 
         private void listarProdutos() {
@@ -102,12 +106,22 @@ private void buscarInterativo() {
             return;
         }
         System.out.print("Novo nome (" + produto.getNome() + "): ");
-        produto.setNome(scanner.nextLine());
+        String nome = scanner.nextLine();
         System.out.print("Nova descrição (" + produto.getDescricao() + "): ");
-        produto.setDescricao(scanner.nextLine());
+        String descricao = scanner.nextLine();
         System.out.print("Novo preço (" + produto.getPreco() + "): ");
-        produto.setPreco(Double.parseDouble(scanner.nextLine().replace(",", ".")));
-        System.out.println("Produto atualizado com sucesso!");
+        String preco = scanner.nextLine();
+
+        try {
+            produto.setNome(nome);
+            produto.setDescricao(descricao);
+            produto.setPreco(Double.parseDouble(preco.replace(",", ".")));
+            System.out.println("Produto atualizado com sucesso!");
+        } catch (NumberFormatException e) {
+            System.out.println("Erro: Preço inválido.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
  
     private void remover() {

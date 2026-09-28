@@ -1,5 +1,7 @@
 package models;
 
+import util.Validador;
+
 public class Produto {
     private String nome;
     private String descricao;
@@ -7,10 +9,10 @@ public class Produto {
     private String codigo;
 
     public Produto(String nome, String descricao, double preco, String codigo) {
-        this.nome = nome;
-        this.descricao = descricao;
-        this.preco = preco;
-        this.codigo = codigo;
+        setNome(nome);
+        setDescricao(descricao);
+        setCodigo(codigo);
+        setPreco(preco);
     }
 
     public String getNome() {
@@ -18,6 +20,7 @@ public class Produto {
     }
 
     public void setNome(String nome) {
+        Validador.exigirTexto(nome, "O nome do produto é obrigatório.");
         this.nome = nome;
     }
 
@@ -26,7 +29,7 @@ public class Produto {
     }
 
     public void setDescricao(String descricao) {
-        this.descricao = descricao;
+        this.descricao = descricao == null ? "" : descricao;
     }
 
     public double getPreco() {
@@ -38,13 +41,12 @@ public class Produto {
     }
 
     public void setCodigo(String codigo) {
+        Validador.exigirTexto(codigo, "O código do produto é obrigatório.");
         this.codigo = codigo;
     }
 
       public void setPreco(double preco) {
-        if (preco < 0) {
-            throw new IllegalArgumentException("O preço não pode ser negativo.");
-        }
+        Validador.exigirNaoNegativo(preco, "O preço não pode ser negativo.");
         this.preco = preco;
     }
  

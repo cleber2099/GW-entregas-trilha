@@ -1,15 +1,17 @@
 package models;
 
+import util.Validador;
+
 public class Cliente {
     private String nome;
     private String telefone;
     private String cpf;
     private Endereco endereco;
     public Cliente(String nome, Endereco endereco, String telefone, String cpf) {
-        this.nome = nome;
-        this.endereco = endereco;
-        this.telefone = telefone;
-        this.cpf = cpf;
+        setNome(nome);
+        setEndereco(endereco);
+        setTelefone(telefone);
+        setCpf(cpf);
     }
 
     public String getNome() {
@@ -17,6 +19,7 @@ public class Cliente {
     }
 
     public void setNome(String nome) {
+        Validador.exigirTexto(nome, "O nome do cliente é obrigatório.");
         this.nome = nome;
     }
 
@@ -25,6 +28,7 @@ public class Cliente {
     }
 
     public void setEndereco(Endereco endereco) {
+        Validador.exigirNaoNulo(endereco, "O endereço do cliente é obrigatório.");
         this.endereco = endereco;
     }
 
@@ -33,6 +37,7 @@ public class Cliente {
     }
 
     public void setTelefone(String telefone) {
+        Validador.exigirTexto(telefone, "O telefone do cliente é obrigatório.");
         this.telefone = telefone;
     }
 
@@ -41,6 +46,11 @@ public class Cliente {
     }
 
     public void setCpf(String cpf) {
+        Validador.exigirTexto(cpf, "O CPF do cliente é obrigatório.");
+        String digitos = cpf.replaceAll("\\D", "");
+        if (digitos.length() != 11) {
+            throw new IllegalArgumentException("O CPF deve conter 11 dígitos.");
+        }
         this.cpf = cpf;
     }
 

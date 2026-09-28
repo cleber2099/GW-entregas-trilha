@@ -76,11 +76,18 @@ public class EntregaController {
         System.out.println("Endereço do cliente: " + destino.formatar());
         System.out.print("Entregar em outro endereço? (s/n): ");
         String resposta = scanner.nextLine();
-        if (resposta.equalsIgnoreCase("s")) {
-            destino = lerEndereco();
+
+        Entrega entrega;
+        try {
+            if (resposta.equalsIgnoreCase("s")) {
+                destino = lerEndereco();
+            }
+            entrega = new Entrega(codigo, cliente, destino);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Erro: " + e.getMessage());
+            return;
         }
 
-        Entrega entrega = new Entrega(codigo, cliente, destino);
         lerItens(entrega);
 
         if (entrega.getItens().isEmpty()) {
