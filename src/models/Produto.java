@@ -46,7 +46,9 @@ public class Produto {
     }
 
       public void setPreco(double preco) {
-        Validador.exigirNaoNegativo(preco, "O preço não pode ser negativo.");
+        if (preco <= 0) {
+            throw new IllegalArgumentException("O preço deve ser maior que zero.");
+        }
         this.preco = preco;
     }
  

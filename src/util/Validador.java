@@ -17,14 +17,8 @@ public final class Validador {
         }
     }
 
-    public static void exigirNaoNegativo(double valor, String mensagem) {
-        if (valor < 0) {
-            throw new IllegalArgumentException(mensagem);
-        }
-    }
-
-    public static void exigirPositivo(int valor, String mensagem) {
-        if (valor <= 0) {
+    public static void exigirMinimo(double valor, double minimo, String mensagem) {
+        if (valor < minimo) {
             throw new IllegalArgumentException(mensagem);
         }
     }
