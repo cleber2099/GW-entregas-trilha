@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 import models.Cliente;
 import models.Endereco;
-import models.Entrega;
+import models.entrega.Entrega;
 import models.Produto;
 
 public class EntregaController {
@@ -90,7 +90,7 @@ public class EntregaController {
 
         lerItens(entrega);
 
-        if (entrega.getItens().isEmpty()) {
+        if (entrega.estaVazia()) {
             System.out.println("A entrega precisa ter ao menos um item. Cadastro cancelado.");
             return;
         }

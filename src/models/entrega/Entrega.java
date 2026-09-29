@@ -1,9 +1,11 @@
-package models;
+package models.entrega;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import models.Cliente;
+import models.Endereco;
+import models.Produto;
 import util.Validador;
 
 public class Entrega {
@@ -69,8 +71,8 @@ public class Entrega {
         return status;
     }
 
-    public List<ItemEntrega> getItens() {
-        return Collections.unmodifiableList(itens);
+    public boolean estaVazia() {
+        return itens.isEmpty();
     }
 
     public void adicionarItem(Produto produto, int quantidade) {
@@ -173,5 +175,39 @@ public class Entrega {
 
         texto += "  Total: R$" + String.format("%.2f", calcularTotal());
         return texto;
+    }
+
+    private static class ItemEntrega {
+
+        private Produto produto;
+        private int quantidade;
+
+        ItemEntrega(Produto produto, int quantidade) {
+            Validador.exigirNaoNulo(produto, "O produto do item é obrigatório.");
+            setQuantidade(quantidade);
+            this.produto = produto;
+        }
+
+        Produto getProduto() {
+            return produto;
+        }
+
+        int getQuantidade() {
+            return quantidade;
+        }
+
+        void setQuantidade(int quantidade) {
+            Validador.exigirMinimo(quantidade, 1, "A quantidade deve ser maior que zero.");
+            this.quantidade = quantidade;
+        }
+
+        double calcularSubtotal() {
+            return produto.getPreco() * quantidade;
+        }
+
+        @Override
+        public String toString() {
+            return produto.getNome() + " x" + quantidade + " = R$" + String.format("%.2f", calcularSubtotal());
+        }
     }
 }
