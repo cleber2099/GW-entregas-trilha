@@ -28,9 +28,9 @@ public class EntregaController {
             System.out.println("1 - Cadastrar");
             System.out.println("2 - Listar todas");
             System.out.println("3 - Buscar por código");
-            System.out.println("4 - Adicionar item");
-            System.out.println("5 - Remover item");
-            System.out.println("6 - Atualizar status");
+            System.out.println("4 - Adicionar produto");
+            System.out.println("5 - Remover produto");
+            System.out.println("6 - Atualizar status (realizada / não realizada)");
             System.out.println("7 - Excluir");
             System.out.println("0 - Voltar");
             System.out.print("Escolha uma opção: ");
@@ -64,25 +64,20 @@ public class EntregaController {
             return;
         }
 
-        System.out.print("CPF do cliente: ");
-        String cpf = scanner.nextLine();
-        Cliente cliente = clienteController.buscarPorCpf(cpf);
-        if (cliente == null) {
-            System.out.println("Cliente não encontrado. Cadastre-o primeiro.");
+        Cliente remetente = pedirCliente("Remetente");
+        if (remetente == null) {
+            return;
+        }
+        Cliente destinatario = pedirCliente("Destinatário");
+        if (destinatario == null) {
             return;
         }
 
-        Endereco destino = cliente.getEndereco();
-        System.out.println("Endereço do cliente: " + destino.formatar());
-        System.out.print("Entregar em outro endereço? (s/n): ");
-        String resposta = scanner.nextLine();
-
         Entrega entrega;
         try {
-            if (resposta.equalsIgnoreCase("s")) {
-                destino = lerEndereco();
-            }
-            entrega = new Entrega(codigo, cliente, destino);
+            Endereco origem = escolherEndereco("origem", remetente);
+            Endereco destino = escolherEndereco("destino", destinatario);
+            entrega = new Entrega(codigo, remetente, destinatario, origem, destino);
         } catch (IllegalArgumentException e) {
             System.out.println("Erro: " + e.getMessage());
             return;
@@ -147,9 +142,9 @@ public class EntregaController {
         String codigoProduto = scanner.nextLine();
         boolean removido = entrega.removerItem(codigoProduto);
         if (removido) {
-            System.out.println("Item removido com sucesso!");
+            System.out.println("Produto removido com sucesso!");
         } else {
-            System.out.println("Item não encontrado nesta entrega.");
+            System.out.println("Produto não encontrado nesta entrega.");
         }
     }
 
@@ -160,19 +155,16 @@ public class EntregaController {
         }
 
         System.out.println("Status atual: " + entrega.getStatus());
-        System.out.println("1 - Iniciar trânsito");
-        System.out.println("2 - Confirmar entrega");
-        System.out.println("3 - Cancelar entrega");
+        System.out.println("1 - Marcar como realizada");
+        System.out.println("2 - Marcar como não realizada");
         System.out.println("0 - Voltar");
         System.out.print("Escolha uma opção: ");
         int opcao = lerInteiro();
 
         if (opcao == 1) {
-            entrega.iniciarTransito();
+            entrega.marcarRealizada();
         } else if (opcao == 2) {
-            entrega.confirmarEntrega();
-        } else if (opcao == 3) {
-            entrega.cancelar();
+            entrega.marcarNaoRealizada();
         } else if (opcao == 0) {
             return;
         } else {
@@ -188,6 +180,25 @@ public class EntregaController {
             entregas.remove(entrega);
             System.out.println("Entrega removida com sucesso!");
         }
+    }
+
+    private Cliente pedirCliente(String papel) {
+        System.out.print("CPF/CNPJ do " + papel.toLowerCase() + ": ");
+        Cliente cliente = clienteController.buscarPorDocumento(scanner.nextLine());
+        if (cliente == null) {
+            System.out.println(papel + " não encontrado. Cadastre-o primeiro.");
+        }
+        return cliente;
+    }
+
+    private Endereco escolherEndereco(String tipo, Cliente cliente) {
+        Endereco endereco = cliente.getEndereco();
+        System.out.println("Endereço de " + tipo + " (cadastro de " + cliente.getNome() + "): " + endereco.formatar());
+        System.out.print("Usar outro endereço de " + tipo + "? (s/n): ");
+        if (scanner.nextLine().equalsIgnoreCase("s")) {
+            return lerEndereco();
+        }
+        return endereco;
     }
 
     private Entrega pedirEntrega() {
@@ -221,7 +232,7 @@ public class EntregaController {
             }
 
             entrega.adicionarItem(produto, quantidade);
-            System.out.println("Item adicionado: " + produto.getNome() + " x" + quantidade);
+            System.out.println("Produto adicionado: " + produto.getNome() + " x" + quantidade);
         }
     }
 

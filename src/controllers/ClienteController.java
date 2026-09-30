@@ -21,7 +21,7 @@ public class ClienteController {
             System.out.println("\n--- Clientes ---");
             System.out.println("1 - Cadastrar");
             System.out.println("2 - Listar todos");
-            System.out.println("3 - Buscar por CPF");
+            System.out.println("3 - Buscar por CPF/CNPJ");
             System.out.println("4 - Editar");
             System.out.println("5 - Remover");
             System.out.println("0 - Voltar");
@@ -41,17 +41,17 @@ public class ClienteController {
     }
 
     private void cadastrar() {
-        System.out.println("\n-- Cadastro de Cliente --");
+        System.out.println("\n-- Cadastro de Cliente (remetente/destinatário) --");
         System.out.print("Nome: ");
         String nome = scanner.nextLine();
-        System.out.print("CPF: ");
-        String cpf = scanner.nextLine();
+        System.out.print("CPF/CNPJ: ");
+        String documento = scanner.nextLine();
         System.out.print("Telefone: ");
         String telefone = scanner.nextLine();
 
         try {
             Endereco endereco = lerEndereco();
-            clientes.add(new Cliente(nome, endereco, telefone, cpf));
+            clientes.add(new Cliente(nome, endereco, telefone, documento));
             System.out.println("Cliente cadastrado com sucesso!");
         } catch (IllegalArgumentException e) {
             System.out.println("Erro: " + e.getMessage());
@@ -69,9 +69,10 @@ public class ClienteController {
         }
     }
 
-    public Cliente buscarPorCpf(String cpf) {
+    public Cliente buscarPorDocumento(String documento) {
+        String digitos = documento.replaceAll("\\D", "");
         for (Cliente c : clientes) {
-            if (c.getCpf().equalsIgnoreCase(cpf)) {
+            if (c.getDocumento().replaceAll("\\D", "").equals(digitos)) {
                 return c;
             }
         }
@@ -79,14 +80,14 @@ public class ClienteController {
     }
 
     private void buscarInterativo() {
-        System.out.print("Informe o CPF: ");
-        Cliente cliente = buscarPorCpf(scanner.nextLine());
+        System.out.print("Informe o CPF/CNPJ: ");
+        Cliente cliente = buscarPorDocumento(scanner.nextLine());
         System.out.println(cliente != null ? cliente : "Cliente não encontrado.");
     }
 
     private void editar() {
-        System.out.print("CPF do cliente a editar: ");
-        Cliente cliente = buscarPorCpf(scanner.nextLine());
+        System.out.print("CPF/CNPJ do cliente a editar: ");
+        Cliente cliente = buscarPorDocumento(scanner.nextLine());
         if (cliente == null) {
             System.out.println("Cliente não encontrado.");
             return;
@@ -111,8 +112,8 @@ public class ClienteController {
     }
 
     private void remover() {
-        System.out.print("CPF do cliente a remover: ");
-        Cliente cliente = buscarPorCpf(scanner.nextLine());
+        System.out.print("CPF/CNPJ do cliente a remover: ");
+        Cliente cliente = buscarPorDocumento(scanner.nextLine());
         if (cliente == null) {
             System.out.println("Cliente não encontrado.");
             return;

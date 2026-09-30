@@ -5,13 +5,13 @@ import util.Validador;
 public class Cliente {
     private String nome;
     private String telefone;
-    private String cpf;
+    private String documento;
     private Endereco endereco;
-    public Cliente(String nome, Endereco endereco, String telefone, String cpf) {
+    public Cliente(String nome, Endereco endereco, String telefone, String documento) {
         setNome(nome);
         setEndereco(endereco);
         setTelefone(telefone);
-        setCpf(cpf);
+        setDocumento(documento);
     }
 
     public String getNome() {
@@ -41,21 +41,17 @@ public class Cliente {
         this.telefone = telefone;
     }
 
-    public String getCpf() {
-        return cpf;
+    public String getDocumento() {
+        return documento;
     }
 
-    public void setCpf(String cpf) {
-        Validador.exigirTexto(cpf, "O CPF do cliente é obrigatório.");
-        String digitos = cpf.replaceAll("\\D", "");
-        if (digitos.length() != 11) {
-            throw new IllegalArgumentException("O CPF deve conter 11 dígitos.");
-        }
-        this.cpf = cpf;
+    public void setDocumento(String documento) {
+        Validador.exigirDocumento(documento, "O CPF/CNPJ é obrigatório.");
+        this.documento = documento;
     }
 
      public String exibirDados() {
-        return "Cliente: " + nome + " | CPF: " + cpf + " | E-mail: "
+        return "Nome: " + nome + " | CPF/CNPJ: " + documento
                 + " | Telefone: " + telefone + " | Endereço: " + endereco.formatar();
     }
  
