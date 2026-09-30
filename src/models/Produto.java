@@ -3,37 +3,18 @@ package models;
 import util.Validador;
 
 public class Produto {
-    private String nome;
-    private String descricao;
-    private double preco;
     private String codigo;
+    private String nome;
+    private double peso;
+    private double volume;
+    private double valor;
 
-    public Produto(String nome, String descricao, double preco, String codigo) {
-        setNome(nome);
-        setDescricao(descricao);
+    public Produto(String codigo, String nome, double peso, double volume, double valor) {
         setCodigo(codigo);
-        setPreco(preco);
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        Validador.exigirTexto(nome, "O nome do produto é obrigatório.");
-        this.nome = nome;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao == null ? "" : descricao;
-    }
-
-    public double getPreco() {
-        return preco;
+        setNome(nome);
+        setPeso(peso);
+        setVolume(volume);
+        setValor(valor);
     }
 
     public String getCodigo() {
@@ -45,19 +26,46 @@ public class Produto {
         this.codigo = codigo;
     }
 
-      public void setPreco(double preco) {
-        if (preco <= 0) {
-            throw new IllegalArgumentException("O preço deve ser maior que zero.");
-        }
-        this.preco = preco;
+    public String getNome() {
+        return nome;
     }
- 
-   
+
+    public void setNome(String nome) {
+        Validador.exigirTexto(nome, "O nome do produto é obrigatório.");
+        this.nome = nome;
+    }
+
+    public double getPeso() {
+        return peso;
+    }
+
+    public void setPeso(double peso) {
+        Validador.exigirPositivo(peso, "O peso deve ser maior que zero.");
+        this.peso = peso;
+    }
+
+    public double getVolume() {
+        return volume;
+    }
+
+    public void setVolume(double volume) {
+        Validador.exigirPositivo(volume, "O volume deve ser maior que zero.");
+        this.volume = volume;
+    }
+
+    public double getValor() {
+        return valor;
+    }
+
+    public void setValor(double valor) {
+        Validador.exigirPositivo(valor, "O valor deve ser maior que zero.");
+        this.valor = valor;
+    }
+
     @Override
     public String toString() {
-        return "Produto: " + nome + " (" + codigo + ") | Preço: R$" + String.format("%.2f", preco);
+        return "Produto: " + nome + " (" + codigo + ") | Peso: " + String.format("%.2f", peso)
+                + " kg | Volume: " + String.format("%.3f", volume)
+                + " m³ | Valor: R$" + String.format("%.2f", valor);
     }
-    
-
-    
 }

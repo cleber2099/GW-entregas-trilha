@@ -54,19 +54,20 @@ public class ProdutoController {
     }
         private void cadastrarProduto() {
             System.out.println("Cadastro de Produto");
-            System.out.print("Nome: ");
-            String nome = scanner.nextLine();
-            System.out.print("Descrição: ");
-            String descricao = scanner.nextLine();
-            System.out.print("Preço: ");
-            double preco = scanner.nextDouble();
-            scanner.nextLine();
             System.out.print("Código: ");
             String codigo = scanner.nextLine();
+            System.out.print("Nome: ");
+            String nome = scanner.nextLine();
 
             try {
-                Produto produto = new Produto(nome, descricao, preco, codigo);
-                produtos.add(produto);
+                if (buscarPorCodigo(codigo) != null) {
+                    System.out.println("Já existe um produto com esse código.");
+                    return;
+                }
+                double peso = lerDecimal("Peso (kg): ");
+                double volume = lerDecimal("Volume (m³): ");
+                double valor = lerDecimal("Valor (R$): ");
+                produtos.add(new Produto(codigo, nome, peso, volume, valor));
                 System.out.println("Produto cadastrado com sucesso!");
             } catch (IllegalArgumentException e) {
                 System.out.println("Erro: " + e.getMessage());
@@ -75,12 +76,21 @@ public class ProdutoController {
 
         private void listarProdutos() {
             System.out.println("Lista de Produtos:");
+            if (produtos.isEmpty()) {
+                System.out.println("Nenhum produto cadastrado.");
+                return;
+            }
             for (Produto produto : produtos) {
-                System.out.println("Código: " + produto.getCodigo());
-                System.out.println("Nome: " + produto.getNome());
-                System.out.println("Descrição: " + produto.getDescricao());
-                System.out.println("Preço: " + produto.getPreco());
-                System.out.println("------------------------");
+                System.out.println(produto);
+            }
+        }
+
+        private double lerDecimal(String rotulo) {
+            System.out.print(rotulo);
+            try {
+                return Double.parseDouble(scanner.nextLine().trim().replace(",", "."));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Número inválido.");
             }
         }
 
@@ -107,18 +117,16 @@ private void buscarInterativo() {
         }
         System.out.print("Novo nome (" + produto.getNome() + "): ");
         String nome = scanner.nextLine();
-        System.out.print("Nova descrição (" + produto.getDescricao() + "): ");
-        String descricao = scanner.nextLine();
-        System.out.print("Novo preço (" + produto.getPreco() + "): ");
-        String preco = scanner.nextLine();
 
         try {
+            double peso = lerDecimal("Novo peso (" + produto.getPeso() + " kg): ");
+            double volume = lerDecimal("Novo volume (" + produto.getVolume() + " m³): ");
+            double valor = lerDecimal("Novo valor (" + produto.getValor() + "): ");
             produto.setNome(nome);
-            produto.setDescricao(descricao);
-            produto.setPreco(Double.parseDouble(preco.replace(",", ".")));
+            produto.setPeso(peso);
+            produto.setVolume(volume);
+            produto.setValor(valor);
             System.out.println("Produto atualizado com sucesso!");
-        } catch (NumberFormatException e) {
-            System.out.println("Erro: Preço inválido.");
         } catch (IllegalArgumentException e) {
             System.out.println("Erro: " + e.getMessage());
         }
