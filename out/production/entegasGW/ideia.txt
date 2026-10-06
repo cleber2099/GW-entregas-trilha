@@ -1,0 +1,15 @@
+metodo que ler inteiro
+
+-----------------
+
+Motoristas
+
+Local de retirada:
+Na transportadora, ou cliente
+local de entrega
+--------------
+
+cliente:
+
+Cnpj que envia
+Cpf ou cnpj que recebe
