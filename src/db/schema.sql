@@ -62,7 +62,7 @@ CREATE TABLE item_entrega (
     id         SERIAL PRIMARY KEY,
     entrega_id INT    NOT NULL,
     produto_id INT    NOT NULL,
-    quantidade BIGINT NOT NULL CHECK (quantidade >= 1),
+    quantidade DECIMAL NOT NULL CHECK (quantidade >= 1),
     CONSTRAINT uk_item_entrega_produto UNIQUE (entrega_id, produto_id),
     CONSTRAINT fk_item_entrega_entrega
         FOREIGN KEY (entrega_id) REFERENCES entrega (id) ON DELETE CASCADE,
