@@ -1,0 +1,127 @@
+DAO E FACTORY DE PRODUTO
+========================
+
+1. O QUE É CADA PEÇA
+--------------------
+Padrão DAO (Data Access Object): isola todo o código de banco (SQL/JDBC) em
+uma classe própria. O resto do sistema (controllers, models) não conhece SQL;
+apenas chama métodos como inserir(), listar(), remover().
+
+Padrão Factory: centraliza a CRIAÇÃO de objetos. Quem precisa de um DAO ou de
+uma conexão pede à fábrica, em vez de usar "new" diretamente.
+
+2. ARQUIVOS
+-----------
+db/ConnectionFactory.java
+    Fábrica de conexões JDBC com o PostgreSQL.
+    - getConnection() devolve uma nova Connection a cada chamada.
+    - URL, usuário e senha vêm das variáveis de ambiente DB_URL, DB_USER e
+      DB_PASSWORD. Se não existirem, usa os padrões:
+        jdbc:postgresql://localhost:5432/entregasgw | postgres | postgres
+    - Para trocar de banco ou de credenciais, só este arquivo muda.
+
+dao/ProdutoDAO.java  (interface)
+    Contrato das operações de produto (CRUD):
+      inserir(Produto)           grava um novo produto
+      buscarPorCodigo(String)    retorna o Produto ou null se não existir
+      listar()                   retorna todos, ordenados por nome
+      atualizar(Produto)         atualiza nome/peso/volume/valor; true se achou
+      remover(String codigo)     apaga; true se algo foi removido
+    Todos lançam SQLException; quem chama decide como tratar o erro.
+
+dao/ProdutoDAOJdbc.java  (implementação)
+    Implementa a interface usando JDBC puro com PreparedStatement
+    (evita SQL injection). Cada método abre a conexão num try-with-resources,
+    então Connection, Statement e ResultSet são fechados automaticamente.
+    - O método privado mapear(ResultSet) converte uma linha da tabela em um
+      objeto Produto (passando pelo construtor, logo pelas validações).
+    - A busca/atualização/remoção usa LOWER(codigo) = LOWER(?) para manter o
+      mesmo comportamento case-insensitive do controller atual
+      (equalsIgnoreCase).
+
+dao/DAOFactory.java
+    Fábrica de DAOs. criarProdutoDAO() devolve um ProdutoDAO. O código que
+    usa o DAO depende só da interface; se um dia houver outra implementação
+    (em memória, para testes, outro banco), basta mudar o retorno aqui.
+
+3. DECISÕES
+-----------
+- A busca é feita pela coluna "codigo" (UNIQUE na tabela produto), porque a
+  classe Produto não possui o campo "id" (SERIAL do banco). Assim o model
+  não precisou ser alterado.
+- Não foi mexido no ProdutoController: ele continua usando a lista em
+  memória. A integração é o próximo passo (ver item 5).
+
+4. EXEMPLO DE USO
+-----------------
+    ProdutoDAO dao = DAOFactory.criarProdutoDAO();
+
+    try {
+        dao.inserir(new Produto("P001", "Caixa", 2.5, 0.01, 49.90));
+
+        Produto p = dao.buscarPorCodigo("p001");   // case-insensitive
+        List<Produto> todos = dao.listar();
+
+        p.setValor(59.90);
+        dao.atualizar(p);
+
+        dao.remover("P001");
+    } catch (SQLException e) {
+        System.out.println("Erro no banco: " + e.getMessage());
+    }
+
+Violar a UNIQUE de codigo em inserir() gera SQLException (SQLState 23505).
+
+5. PARA USAR (PRÓXIMOS PASSOS)
+------------------------------
+1. Criar o banco e rodar db/schema.sql.
+2. Adicionar o driver JDBC do PostgreSQL (postgresql-XX.jar) ao classpath
+   do projeto (IntelliJ: Project Structure > Libraries).
+3. No ProdutoController, trocar a List<Produto> por
+   ProdutoService service = new ProdutoService(); e chamar os métodos do
+   service, tratando IllegalArgumentException e ServiceException.
+
+6. SERVICE DE PRODUTO
+---------------------
+service/ProdutoService.java
+    Camada de regras de negócio entre o controller e o DAO.
+    Fluxo: Controller -> ProdutoService -> ProdutoDAO -> banco.
+    - cadastrar(...)  valida os dados (via construtor de Produto) e impede
+                      código duplicado antes de inserir.
+    - buscarPorCodigo(codigo)  exige código preenchido; retorna null se não existir.
+    - listar()        retorna todos os produtos.
+    - editar(...)     busca o produto existente, aplica os setters (com
+                      validação) e grava; erro se não encontrado.
+    - remover(codigo) erro se não encontrado.
+    Erros de negócio (dados inválidos, duplicado, não encontrado) lançam
+    IllegalArgumentException, o mesmo que o controller já captura hoje.
+    SQLException do DAO é embrulhada em service/ServiceException (unchecked),
+    então o controller não precisa de throws/try para SQL; basta capturar
+    ServiceException e mostrar a mensagem.
+    O construtor recebe um ProdutoDAO (injeção), o que permite testar o
+    service com um DAO falso; o construtor vazio usa o DAOFactory.
+
+    Exemplo:
+        ProdutoService service = new ProdutoService();
+        service.cadastrar("P001", "Caixa", 2.5, 0.01, 49.90);
+        Produto p = service.buscarPorCodigo("P001");
+        service.editar("P001", "Caixa G", 3.0, 0.02, 59.90);
+        service.remover("P001");
+
+    O passo 3 do item 5 passa a ser: o ProdutoController usa ProdutoService
+    (e não o DAO direto).
+
+7. ESTRUTURA FINAL
+------------------
+src/
+├── dao/
+│   ├── DAOFactory.java
+│   ├── ProdutoDAO.java
+│   ├── ProdutoDAOJdbc.java
+│   └── DAO_PRODUTO.txt
+├── db/
+│   ├── ConnectionFactory.java
+│   └── schema.sql
+└── service/
+    ├── ProdutoService.java
+    └── ServiceException.java
