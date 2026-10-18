@@ -1,13 +1,14 @@
 package controllers;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 import models.Produto;
+import service.ProdutoService;
+import service.ServiceException;
 
 public class ProdutoController {
-    private List<Produto> produtos = new ArrayList<>();
+    private ProdutoService service = new ProdutoService();
     Scanner scanner;
 
    public ProdutoController(Scanner scanner) {
@@ -26,7 +27,7 @@ public class ProdutoController {
             System.out.println("0. Voltar ao Menu Principal");
             System.out.print("Escolha uma opção: ");
             opcao = scanner.nextInt();
-            scanner.nextLine(); 
+            scanner.nextLine();
             switch (opcao) {
                 case 1:
                     cadastrarProduto();
@@ -67,15 +68,22 @@ public class ProdutoController {
                 double peso = lerDecimal("Peso (kg): ");
                 double volume = lerDecimal("Volume (m³): ");
                 double valor = lerDecimal("Valor (R$): ");
-                produtos.add(new Produto(codigo, nome, peso, volume, valor));
+                service.cadastrar(codigo, nome, peso, volume, valor);
                 System.out.println("Produto cadastrado com sucesso!");
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | ServiceException e) {
                 System.out.println("Erro: " + e.getMessage());
             }
         }
 
         private void listarProdutos() {
             System.out.println("Lista de Produtos:");
+            List<Produto> produtos;
+            try {
+                produtos = service.listar();
+            } catch (ServiceException e) {
+                System.out.println("Erro: " + e.getMessage());
+                return;
+            }
             if (produtos.isEmpty()) {
                 System.out.println("Nenhum produto cadastrado.");
                 return;
@@ -95,19 +103,22 @@ public class ProdutoController {
         }
 
         public Produto buscarPorCodigo(String codigo) {
-            for (Produto p : produtos) {
-                if (p.getCodigo().equalsIgnoreCase(codigo)) {
-                return p;
-                }
+            if (codigo == null || codigo.trim().isEmpty()) {
+                return null;
             }
-            return null;
+            try {
+                return service.buscarPorCodigo(codigo);
+            } catch (ServiceException e) {
+                System.out.println("Erro: " + e.getMessage());
+                return null;
+            }
         }
 private void buscarInterativo() {
         System.out.print("Informe o código: ");
         Produto produto = buscarPorCodigo(scanner.nextLine());
         System.out.println(produto != null ? produto : "Produto não encontrado.");
     }
- 
+
     private void editar() {
         System.out.print("Código do produto a editar: ");
         Produto produto = buscarPorCodigo(scanner.nextLine());
@@ -122,16 +133,13 @@ private void buscarInterativo() {
             double peso = lerDecimal("Novo peso (" + produto.getPeso() + " kg): ");
             double volume = lerDecimal("Novo volume (" + produto.getVolume() + " m³): ");
             double valor = lerDecimal("Novo valor (" + produto.getValor() + "): ");
-            produto.setNome(nome);
-            produto.setPeso(peso);
-            produto.setVolume(volume);
-            produto.setValor(valor);
+            service.editar(produto.getCodigo(), nome, peso, volume, valor);
             System.out.println("Produto atualizado com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | ServiceException e) {
             System.out.println("Erro: " + e.getMessage());
         }
     }
- 
+
     private void remover() {
         System.out.print("Código do produto a remover: ");
         Produto produto = buscarPorCodigo(scanner.nextLine());
@@ -139,9 +147,13 @@ private void buscarInterativo() {
             System.out.println("Produto não encontrado.");
             return;
         }
-        produtos.remove(produto);
-        System.out.println("Produto removido com sucesso!");
+        try {
+            service.remover(produto.getCodigo());
+            System.out.println("Produto removido com sucesso!");
+        } catch (IllegalArgumentException | ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
-   
+
 
 }

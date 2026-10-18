@@ -1,14 +1,15 @@
 package controllers;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import models.Cliente;
 import models.Endereco;
+import service.ClienteService;
+import service.ServiceException;
 
 public class ClienteController {
 
-    private List<Cliente> clientes = new ArrayList<>();
+    private ClienteService service = new ClienteService();
     private Scanner scanner;
 
     public ClienteController(Scanner scanner) {
@@ -51,15 +52,22 @@ public class ClienteController {
 
         try {
             Endereco endereco = lerEndereco();
-            clientes.add(new Cliente(nome, endereco, telefone, documento));
+            service.cadastrar(nome, endereco, telefone, documento);
             System.out.println("Cliente cadastrado com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | ServiceException e) {
             System.out.println("Erro: " + e.getMessage());
         }
     }
 
     private void listar() {
         System.out.println("\n-- Lista de Clientes --");
+        List<Cliente> clientes;
+        try {
+            clientes = service.listar();
+        } catch (ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+            return;
+        }
         if (clientes.isEmpty()) {
             System.out.println("Nenhum cliente cadastrado.");
             return;
@@ -70,13 +78,15 @@ public class ClienteController {
     }
 
     public Cliente buscarPorDocumento(String documento) {
-        String digitos = documento.replaceAll("\\D", "");
-        for (Cliente c : clientes) {
-            if (c.getDocumento().replaceAll("\\D", "").equals(digitos)) {
-                return c;
-            }
+        if (documento == null || documento.trim().isEmpty()) {
+            return null;
         }
-        return null;
+        try {
+            return service.buscarPorDocumento(documento);
+        } catch (ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+            return null;
+        }
     }
 
     private void buscarInterativo() {
@@ -100,13 +110,10 @@ public class ClienteController {
         boolean atualizarEndereco = scanner.nextLine().equalsIgnoreCase("s");
 
         try {
-            cliente.setNome(nome);
-            cliente.setTelefone(telefone);
-            if (atualizarEndereco) {
-                cliente.setEndereco(lerEndereco());
-            }
+            Endereco endereco = atualizarEndereco ? lerEndereco() : null;
+            service.editar(cliente.getDocumento(), nome, telefone, endereco);
             System.out.println("Cliente atualizado com sucesso!");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | ServiceException e) {
             System.out.println("Erro: " + e.getMessage());
         }
     }
@@ -118,8 +125,12 @@ public class ClienteController {
             System.out.println("Cliente não encontrado.");
             return;
         }
-        clientes.remove(cliente);
-        System.out.println("Cliente removido com sucesso!");
+        try {
+            service.remover(cliente.getDocumento());
+            System.out.println("Cliente removido com sucesso!");
+        } catch (IllegalArgumentException | ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
 
     private Endereco lerEndereco() {

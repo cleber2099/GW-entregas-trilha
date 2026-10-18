@@ -1,16 +1,17 @@
 package controllers;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import models.Cliente;
 import models.Endereco;
 import models.entrega.Entrega;
 import models.Produto;
+import service.EntregaService;
+import service.ServiceException;
 
 public class EntregaController {
 
-    private List<Entrega> entregas = new ArrayList<>();
+    private EntregaService service = new EntregaService();
     private Scanner scanner;
     private ClienteController clienteController;
     private ProdutoController produtoController;
@@ -90,12 +91,23 @@ public class EntregaController {
             return;
         }
 
-        entregas.add(entrega);
-        System.out.println("Entrega cadastrada com sucesso!");
+        try {
+            service.cadastrar(entrega);
+            System.out.println("Entrega cadastrada com sucesso!");
+        } catch (IllegalArgumentException | ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
 
     private void listar() {
         System.out.println("\n-- Lista de Entregas --");
+        List<Entrega> entregas;
+        try {
+            entregas = service.listar();
+        } catch (ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+            return;
+        }
         if (entregas.isEmpty()) {
             System.out.println("Nenhuma entrega cadastrada.");
             return;
@@ -107,12 +119,15 @@ public class EntregaController {
     }
 
     public Entrega buscarPorCodigo(String codigo) {
-        for (Entrega e : entregas) {
-            if (e.getCodigo().equalsIgnoreCase(codigo)) {
-                return e;
-            }
+        if (codigo == null || codigo.trim().isEmpty()) {
+            return null;
         }
-        return null;
+        try {
+            return service.buscarPorCodigo(codigo);
+        } catch (ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+            return null;
+        }
     }
 
     private void buscarInterativo() {
@@ -127,9 +142,15 @@ public class EntregaController {
 
     private void adicionarItem() {
         Entrega entrega = pedirEntrega();
-        if (entrega != null) {
-            lerItens(entrega);
+        if (entrega == null) {
+            return;
         }
+        if (entrega.getStatus() != Entrega.Status.PENDENTE) {
+            System.out.println("Erro: A entrega não pode ser alterada no status " + entrega.getStatus() + ".");
+            return;
+        }
+        lerItens(entrega);
+        salvarItens(entrega);
     }
 
     private void removerItem() {
@@ -142,8 +163,10 @@ public class EntregaController {
         String codigoProduto = scanner.nextLine();
         boolean removido = entrega.removerItem(codigoProduto);
         if (removido) {
-            System.out.println("Produto removido com sucesso!");
-        } else {
+            if (salvarItens(entrega)) {
+                System.out.println("Produto removido com sucesso!");
+            }
+        } else if (entrega.getStatus() == Entrega.Status.PENDENTE) {
             System.out.println("Produto não encontrado nesta entrega.");
         }
     }
@@ -161,6 +184,7 @@ public class EntregaController {
         System.out.print("Escolha uma opção: ");
         int opcao = lerInteiro();
 
+        Entrega.Status anterior = entrega.getStatus();
         if (opcao == 1) {
             entrega.marcarRealizada();
         } else if (opcao == 2) {
@@ -171,14 +195,37 @@ public class EntregaController {
             System.out.println("Opção inválida.");
             return;
         }
-        System.out.println("Status atualizado para " + entrega.getStatus() + ".");
+        if (entrega.getStatus() == anterior) {
+            return;
+        }
+        try {
+            service.atualizarStatus(entrega);
+            System.out.println("Status atualizado para " + entrega.getStatus() + ".");
+        } catch (ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
     }
 
     private void remover() {
         Entrega entrega = pedirEntrega();
-        if (entrega != null) {
-            entregas.remove(entrega);
+        if (entrega == null) {
+            return;
+        }
+        try {
+            service.remover(entrega.getCodigo());
             System.out.println("Entrega removida com sucesso!");
+        } catch (IllegalArgumentException | ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
+
+    private boolean salvarItens(Entrega entrega) {
+        try {
+            service.atualizarItens(entrega);
+            return true;
+        } catch (ServiceException e) {
+            System.out.println("Erro: " + e.getMessage());
+            return false;
         }
     }
 
