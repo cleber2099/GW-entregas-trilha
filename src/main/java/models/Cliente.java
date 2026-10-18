@@ -46,8 +46,7 @@ public class Cliente {
     }
 
     public void setDocumento(String documento) {
-        Validador.exigirDocumento(documento, "O CPF/CNPJ é obrigatório.");
-        this.documento = documento;
+        this.documento = Validador.exigirDocumento(documento, "O CPF/CNPJ é obrigatório.");
     }
 
      public String exibirDados() {

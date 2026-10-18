@@ -1,52 +1,31 @@
 package service;
 
 import java.sql.SQLException;
-import java.util.List;
 
 import dao.DAOFactory;
 import dao.ProdutoDAO;
 import models.Produto;
 import util.Validador;
 
-public class ProdutoService {
-    private final ProdutoDAO dao;
+public class ProdutoService extends ServiceBase<Produto, String, ProdutoDAO> {
 
     public ProdutoService() {
         this(DAOFactory.criarProdutoDAO());
     }
 
     public ProdutoService(ProdutoDAO dao) {
-        this.dao = dao;
+        super(dao, "produto", "produtos", "Produto não encontrado.");
     }
 
     public Produto cadastrar(String codigo, String nome, double peso, double volume, double valor) {
         Produto produto = new Produto(codigo, nome, peso, volume, valor);
-        try {
-            if (dao.buscarPorCodigo(produto.getCodigo()) != null) {
-                throw new IllegalArgumentException("Já existe um produto com esse código.");
-            }
-            dao.inserir(produto);
-            return produto;
-        } catch (SQLException e) {
-            throw new ServiceException("Erro ao cadastrar produto.", e);
-        }
+        cadastrarNovo(produto, produto.getCodigo(), "Já existe um produto com esse código.");
+        return produto;
     }
 
     public Produto buscarPorCodigo(String codigo) {
         Validador.exigirTexto(codigo, "O código do produto é obrigatório.");
-        try {
-            return dao.buscarPorCodigo(codigo);
-        } catch (SQLException e) {
-            throw new ServiceException("Erro ao buscar produto.", e);
-        }
-    }
-
-    public List<Produto> listar() {
-        try {
-            return dao.listar();
-        } catch (SQLException e) {
-            throw new ServiceException("Erro ao listar produtos.", e);
-        }
+        return buscarPorChave(codigo);
     }
 
     public Produto editar(String codigo, String nome, double peso, double volume, double valor) {
@@ -64,19 +43,6 @@ public class ProdutoService {
     }
 
     public void remover(String codigo) {
-        Produto produto = buscarExistente(codigo);
-        try {
-            dao.remover(produto.getCodigo());
-        } catch (SQLException e) {
-            throw new ServiceException("Erro ao remover produto (verifique se ele está em alguma entrega).", e);
-        }
-    }
-
-    private Produto buscarExistente(String codigo) {
-        Produto produto = buscarPorCodigo(codigo);
-        if (produto == null) {
-            throw new IllegalArgumentException("Produto não encontrado.");
-        }
-        return produto;
+        removerPorChave(codigo, "Erro ao remover produto (verifique se ele está em alguma entrega).");
     }
 }

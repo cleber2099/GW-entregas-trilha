@@ -1,7 +1,10 @@
 package models.entrega;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import models.Cliente;
 import models.Endereco;
@@ -99,6 +102,14 @@ public class Entrega {
 
     public Status getStatus() {
         return status;
+    }
+
+    public Map<Produto, Integer> getItens() {
+        Map<Produto, Integer> resultado = new LinkedHashMap<>();
+        for (ItemEntrega item : itens) {
+            resultado.put(item.getProduto(), item.getQuantidade());
+        }
+        return Collections.unmodifiableMap(resultado);
     }
 
     public boolean estaVazia() {

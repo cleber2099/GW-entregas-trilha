@@ -23,7 +23,7 @@ public class ProdutoDAOJdbc implements ProdutoDAO {
             "DELETE FROM produto WHERE LOWER(codigo) = LOWER(?)";
 
     @Override
-    public void inserir(Produto produto) throws SQLException {
+    public void salvar(Produto produto) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement ps = conn.prepareStatement(INSERT)) {
             ps.setString(1, produto.getCodigo());
@@ -36,7 +36,7 @@ public class ProdutoDAOJdbc implements ProdutoDAO {
     }
 
     @Override
-    public Produto buscarPorCodigo(String codigo) throws SQLException {
+    public Produto buscarPorChave(String codigo) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement ps = conn.prepareStatement(SELECT_POR_CODIGO)) {
             ps.setString(1, codigo);
