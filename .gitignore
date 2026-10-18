@@ -3,3 +3,7 @@
 !.vscode/settings.json
 /.class
 *.class
+# Gradle
+.gradle/
+build/
+bin/
