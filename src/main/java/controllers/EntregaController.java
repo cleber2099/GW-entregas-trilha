@@ -7,6 +7,7 @@ import models.Endereco;
 import models.entrega.Entrega;
 import models.Produto;
 import service.EntregaService;
+import service.ProdutoService;
 import service.ServiceException;
 
 public class EntregaController {
@@ -14,12 +15,11 @@ public class EntregaController {
     private EntregaService service = new EntregaService();
     private Scanner scanner;
     private ClienteController clienteController;
-    private ProdutoController produtoController;
+    private ProdutoService produtoService = new ProdutoService();
 
-    public EntregaController(Scanner scanner, ClienteController clienteController, ProdutoController produtoController) {
+    public EntregaController(Scanner scanner, ClienteController clienteController) {
         this.scanner = scanner;
         this.clienteController = clienteController;
-        this.produtoController = produtoController;
     }
 
     public void menu() {
@@ -265,7 +265,13 @@ public class EntregaController {
                 return;
             }
 
-            Produto produto = produtoController.buscarPorCodigo(codigo);
+            Produto produto;
+            try {
+                produto = produtoService.buscarPorCodigo(codigo);
+            } catch (ServiceException e) {
+                System.out.println("Erro: " + e.getMessage());
+                continue;
+            }
             if (produto == null) {
                 System.out.println("Produto não encontrado.");
                 continue;

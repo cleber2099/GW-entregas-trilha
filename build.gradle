@@ -15,6 +15,10 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+war {
+    archiveFileName = 'entregasgw.war'
+}
+
 repositories {
     mavenCentral()
 }
@@ -23,4 +27,5 @@ dependencies {
     providedCompile 'javax.servlet:javax.servlet-api:4.0.1'
     providedCompile 'javax.servlet.jsp:javax.servlet.jsp-api:2.3.3'
     implementation 'org.postgresql:postgresql:42.7.4'
+    implementation 'javax.servlet:jstl:1.2'
 }
