@@ -5,20 +5,14 @@ import java.util.List;
 
 import dao.DAO;
 
-/**
- * Operações comuns aos services. O tipo D guarda o DAO específico,
- * para que as subclasses acessem métodos próprios (ex.: atualizar).
- */
 public abstract class ServiceBase<T, K, D extends DAO<T, K>> {
     protected final D dao;
     private final String nome;
-    private final String nomePlural;
     private final String mensagemNaoEncontrado;
 
-    protected ServiceBase(D dao, String nome, String nomePlural, String mensagemNaoEncontrado) {
+    protected ServiceBase(D dao, String nome, String mensagemNaoEncontrado) {
         this.dao = dao;
         this.nome = nome;
-        this.nomePlural = nomePlural;
         this.mensagemNaoEncontrado = mensagemNaoEncontrado;
     }
 
@@ -26,7 +20,7 @@ public abstract class ServiceBase<T, K, D extends DAO<T, K>> {
         try {
             return dao.listar();
         } catch (SQLException e) {
-            throw new ServiceException("Erro ao listar " + nomePlural + ".", e);
+            throw new ServiceException("Erro ao consultar o banco de dados.", e);
         }
     }
 

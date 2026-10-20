@@ -1,0 +1,23 @@
+<%@ page pageEncoding="UTF-8" %>
+<label>Rua
+    <input type="text" name="rua" required maxlength="150" value="<c:out value='${form.rua[0]}'/>">
+</label>
+<div class="linha">
+    <label>Número
+        <input type="text" name="numero" required maxlength="20" value="<c:out value='${form.numero[0]}'/>">
+    </label>
+    <label>Bairro
+        <input type="text" name="bairro" required maxlength="100" value="<c:out value='${form.bairro[0]}'/>">
+    </label>
+    <label>CEP
+        <input type="text" name="cep" required maxlength="10" placeholder="00000-000" value="<c:out value='${form.cep[0]}'/>">
+    </label>
+</div>
+<div class="linha">
+    <label>Cidade
+        <input type="text" name="cidade" required maxlength="100" value="<c:out value='${form.cidade[0]}'/>">
+    </label>
+    <label>Estado
+        <input type="text" name="estado" required maxlength="2" placeholder="SP" value="<c:out value='${form.estado[0]}'/>">
+    </label>
+</div>

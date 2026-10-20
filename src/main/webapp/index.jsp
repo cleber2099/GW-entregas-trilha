@@ -1,1 +1,1 @@
-<% response.sendRedirect(request.getContextPath() + "/produtos"); %>
+<% response.sendRedirect(request.getContextPath() + "/entregas"); %>

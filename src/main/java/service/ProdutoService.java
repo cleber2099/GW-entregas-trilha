@@ -14,11 +14,11 @@ public class ProdutoService extends ServiceBase<Produto, String, ProdutoDAO> {
     }
 
     public ProdutoService(ProdutoDAO dao) {
-        super(dao, "produto", "produtos", "Produto não encontrado.");
+        super(dao, "produto", "Produto não encontrado.");
     }
 
-    public Produto cadastrar(String codigo, String nome, double peso, double volume, double valor) {
-        Produto produto = new Produto(codigo, nome, peso, volume, valor);
+    public Produto cadastrar(String codigo, String nome, double peso, double volume, double valor, int estoque) {
+        Produto produto = new Produto(codigo, nome, peso, volume, valor, estoque);
         cadastrarNovo(produto, produto.getCodigo(), "Já existe um produto com esse código.");
         return produto;
     }
@@ -28,12 +28,13 @@ public class ProdutoService extends ServiceBase<Produto, String, ProdutoDAO> {
         return buscarPorChave(codigo);
     }
 
-    public Produto editar(String codigo, String nome, double peso, double volume, double valor) {
+    public Produto editar(String codigo, String nome, double peso, double volume, double valor, int estoque) {
         Produto produto = buscarExistente(codigo);
         produto.setNome(nome);
         produto.setPeso(peso);
         produto.setVolume(volume);
         produto.setValor(valor);
+        produto.setEstoque(estoque);
         try {
             dao.atualizar(produto);
             return produto;
@@ -43,6 +44,6 @@ public class ProdutoService extends ServiceBase<Produto, String, ProdutoDAO> {
     }
 
     public void remover(String codigo) {
-        removerPorChave(codigo, "Erro ao remover produto (verifique se ele está em alguma entrega).");
+        removerPorChave(codigo, "Não foi possível excluir: o produto está em alguma entrega.");
     }
 }

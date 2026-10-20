@@ -6,8 +6,9 @@
 
     <display-name>GW Entregas</display-name>
 
+    <request-character-encoding>UTF-8</request-character-encoding>
+
     <session-config>
-        <!-- id da sessão só por cookie, nunca na URL -->
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
 

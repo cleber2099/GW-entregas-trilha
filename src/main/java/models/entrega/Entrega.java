@@ -14,9 +14,20 @@ import util.Validador;
 public class Entrega {
 
     public enum Status {
-        PENDENTE,
-        REALIZADA,
-        NAO_REALIZADA
+        PENDENTE("Pendente"),
+        EM_TRANSITO("Em trânsito"),
+        ENTREGUE("Entregue"),
+        CANCELADA("Cancelada");
+
+        private final String descricao;
+
+        Status(String descricao) {
+            this.descricao = descricao;
+        }
+
+        public String getDescricao() {
+            return descricao;
+        }
     }
 
     private String codigo;
@@ -24,84 +35,88 @@ public class Entrega {
     private Cliente destinatario;
     private Endereco enderecoOrigem;
     private Endereco enderecoDestino;
-    private Status status;
+    private Status status = Status.PENDENTE;
     private List<ItemEntrega> itens = new ArrayList<>();
-
-    public Entrega(String codigo, Cliente remetente, Cliente destinatario) {
-        this(codigo, remetente, destinatario,
-                remetente != null ? remetente.getEndereco() : null,
-                destinatario != null ? destinatario.getEndereco() : null);
-    }
 
     public Entrega(String codigo, Cliente remetente, Cliente destinatario,
                    Endereco enderecoOrigem, Endereco enderecoDestino) {
-        this.status = Status.PENDENTE;
-        setCodigo(codigo);
-        setRemetente(remetente);
-        setDestinatario(destinatario);
-        setEnderecoOrigem(enderecoOrigem);
-        setEnderecoDestino(enderecoDestino);
-    }
-
-    public String getCodigo() {
-        return codigo;
-    }
-
-    public void setCodigo(String codigo) {
         Validador.exigirTexto(codigo, "O código da entrega é obrigatório.");
-        this.codigo = codigo;
-    }
-
-    public Cliente getRemetente() {
-        return remetente;
-    }
-
-    public void setRemetente(Cliente remetente) {
         Validador.exigirNaoNulo(remetente, "O remetente é obrigatório.");
-        if (!podeAlterar()) {
-            return;
-        }
-        this.remetente = remetente;
-    }
-
-    public Cliente getDestinatario() {
-        return destinatario;
-    }
-
-    public void setDestinatario(Cliente destinatario) {
         Validador.exigirNaoNulo(destinatario, "O destinatário é obrigatório.");
-        if (!podeAlterar()) {
-            return;
-        }
-        this.destinatario = destinatario;
-    }
-
-    public Endereco getEnderecoOrigem() {
-        return enderecoOrigem;
-    }
-
-    public void setEnderecoOrigem(Endereco enderecoOrigem) {
         Validador.exigirNaoNulo(enderecoOrigem, "O endereço de origem é obrigatório.");
-        if (!podeAlterar()) {
-            return;
-        }
-        this.enderecoOrigem = enderecoOrigem;
-    }
-
-    public Endereco getEnderecoDestino() {
-        return enderecoDestino;
-    }
-
-    public void setEnderecoDestino(Endereco enderecoDestino) {
         Validador.exigirNaoNulo(enderecoDestino, "O endereço de destino é obrigatório.");
-        if (!podeAlterar()) {
-            return;
+        if (enderecoOrigem.getId() != null && enderecoOrigem.getId().equals(enderecoDestino.getId())) {
+            throw new IllegalArgumentException("O endereço de destino não pode ser o mesmo da origem.");
         }
+        this.codigo = codigo;
+        this.remetente = remetente;
+        this.destinatario = destinatario;
+        this.enderecoOrigem = enderecoOrigem;
         this.enderecoDestino = enderecoDestino;
     }
 
-    public Status getStatus() {
-        return status;
+    public void iniciarTransporte() {
+        exigirStatus(Status.PENDENTE, "Só uma entrega pendente pode sair para transporte.");
+        if (itens.isEmpty()) {
+            throw new IllegalStateException("Adicione ao menos um produto antes de iniciar o transporte.");
+        }
+        status = Status.EM_TRANSITO;
+    }
+
+    public void confirmarEntrega() {
+        exigirStatus(Status.EM_TRANSITO, "Só uma entrega em trânsito pode ser confirmada.");
+        status = Status.ENTREGUE;
+    }
+
+    public void cancelar() {
+        if (!podeCancelar()) {
+            throw new IllegalStateException("Não é possível cancelar: a entrega está com status "
+                    + status.getDescricao() + ".");
+        }
+        status = Status.CANCELADA;
+    }
+
+    public boolean podeAlterarItens() {
+        return status == Status.PENDENTE;
+    }
+
+    public boolean podeIniciarTransporte() {
+        return status == Status.PENDENTE;
+    }
+
+    public boolean podeConfirmarEntrega() {
+        return status == Status.EM_TRANSITO;
+    }
+
+    public boolean podeCancelar() {
+        return status == Status.PENDENTE || status == Status.EM_TRANSITO;
+    }
+
+    public boolean podeExcluir() {
+        return status == Status.PENDENTE;
+    }
+
+    public void restaurarStatus(Status status) {
+        this.status = status;
+    }
+
+    public void adicionarItem(Produto produto, int quantidade) {
+        Validador.exigirNaoNulo(produto, "O produto é obrigatório.");
+        Validador.exigirMinimo(quantidade, 1, "A quantidade deve ser maior que zero.");
+        exigirStatus(Status.PENDENTE, "Só é possível alterar produtos de uma entrega pendente.");
+
+        ItemEntrega existente = buscarItem(produto.getCodigo());
+        if (existente != null) {
+            existente.setQuantidade(existente.getQuantidade() + quantidade);
+        } else {
+            itens.add(new ItemEntrega(produto, quantidade));
+        }
+    }
+
+    public boolean removerItem(String codigoProduto) {
+        exigirStatus(Status.PENDENTE, "Só é possível alterar produtos de uma entrega pendente.");
+        ItemEntrega item = buscarItem(codigoProduto);
+        return item != null && itens.remove(item);
     }
 
     public Map<Produto, Integer> getItens() {
@@ -114,33 +129,6 @@ public class Entrega {
 
     public boolean estaVazia() {
         return itens.isEmpty();
-    }
-
-    public void adicionarItem(Produto produto, int quantidade) {
-        Validador.exigirNaoNulo(produto, "O produto é obrigatório.");
-        if (!podeAlterar()) {
-            return;
-        }
-
-        ItemEntrega existente = buscarItem(produto.getCodigo());
-        if (existente != null) {
-            existente.setQuantidade(existente.getQuantidade() + quantidade);
-        } else {
-            itens.add(new ItemEntrega(produto, quantidade));
-        }
-    }
-
-    public boolean removerItem(String codigoProduto) {
-        if (!podeAlterar()) {
-            return false;
-        }
-
-        ItemEntrega item = buscarItem(codigoProduto);
-        if (item == null) {
-            return false;
-        }
-        itens.remove(item);
-        return true;
     }
 
     public double calcularValorTotal() {
@@ -167,24 +155,34 @@ public class Entrega {
         return total;
     }
 
-    public void marcarRealizada() {
-        if (status != Status.PENDENTE) {
-            System.out.println("Erro: Só é possível concluir uma entrega pendente (status atual: " + status + ").");
-            return;
-        }
-        if (itens.isEmpty()) {
-            System.out.println("Erro: A entrega precisa ter ao menos um produto.");
-            return;
-        }
-        status = Status.REALIZADA;
+    public String getCodigo() {
+        return codigo;
     }
 
-    public void marcarNaoRealizada() {
-        if (status != Status.PENDENTE) {
-            System.out.println("Erro: Só é possível marcar como não realizada uma entrega pendente (status atual: " + status + ").");
-            return;
+    public Cliente getRemetente() {
+        return remetente;
+    }
+
+    public Cliente getDestinatario() {
+        return destinatario;
+    }
+
+    public Endereco getEnderecoOrigem() {
+        return enderecoOrigem;
+    }
+
+    public Endereco getEnderecoDestino() {
+        return enderecoDestino;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    private void exigirStatus(Status esperado, String mensagem) {
+        if (status != esperado) {
+            throw new IllegalStateException(mensagem);
         }
-        status = Status.NAO_REALIZADA;
     }
 
     private ItemEntrega buscarItem(String codigoProduto) {
@@ -194,36 +192,5 @@ public class Entrega {
             }
         }
         return null;
-    }
-
-    private boolean podeAlterar() {
-        if (status != Status.PENDENTE) {
-            System.out.println("Erro: A entrega não pode ser alterada no status " + status + ".");
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        String texto = "Entrega " + codigo + " [" + status + "]\n";
-        texto += "  Remetente: " + remetente.getNome() + " (" + remetente.getDocumento() + ")\n";
-        texto += "  Origem: " + enderecoOrigem.formatar() + "\n";
-        texto += "  Destinatário: " + destinatario.getNome() + " (" + destinatario.getDocumento() + ")\n";
-        texto += "  Destino: " + enderecoDestino.formatar() + "\n";
-
-        if (itens.isEmpty()) {
-            texto += "  Produtos: (nenhum)\n";
-        } else {
-            texto += "  Produtos:\n";
-            for (ItemEntrega item : itens) {
-                texto += "    - " + item + "\n";
-            }
-        }
-
-        texto += "  Peso total: " + String.format("%.2f", calcularPesoTotal()) + " kg\n";
-        texto += "  Volume total: " + String.format("%.3f", calcularVolumeTotal()) + " m³\n";
-        texto += "  Valor total: R$" + String.format("%.2f", calcularValorTotal());
-        return texto;
     }
 }

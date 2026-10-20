@@ -4,81 +4,66 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import db.ConnectionFactory;
 import models.Cliente;
-import models.Endereco;
 import models.Produto;
 import models.entrega.Entrega;
 
 public class EntregaDAOJdbc implements EntregaDAO {
-    private static final String COLUNAS =
-            "SELECT id, codigo, remetente_id, destinatario_id, endereco_origem_id, endereco_destino_id, status "
-            + "FROM entrega ";
+    private static final String SELECT =
+            "SELECT e.id, e.codigo, e.status, e.endereco_origem_id, e.endereco_destino_id, "
+            + "o.cliente_id AS remetente_id, d.cliente_id AS destinatario_id "
+            + "FROM entrega e "
+            + "JOIN endereco o ON o.id = e.endereco_origem_id "
+            + "JOIN endereco d ON d.id = e.endereco_destino_id ";
 
     private static final String INSERT =
-            "INSERT INTO entrega (codigo, remetente_id, destinatario_id, endereco_origem_id, endereco_destino_id, status) "
-            + "VALUES (?, ?, ?, ?, ?, ?)";
-    private static final String INSERT_ITEM =
-            "INSERT INTO item_entrega (entrega_id, produto_id, quantidade) "
-            + "SELECT ?, id, ? FROM produto WHERE LOWER(codigo) = LOWER(?)";
+            "INSERT INTO entrega (codigo, endereco_origem_id, endereco_destino_id, status) VALUES (?, ?, ?, ?)";
     private static final String SELECT_POR_CODIGO =
-            COLUNAS + "WHERE LOWER(codigo) = LOWER(?)";
+            SELECT + "WHERE LOWER(e.codigo) = LOWER(?)";
     private static final String SELECT_TODAS =
-            COLUNAS + "ORDER BY id";
+            SELECT + "ORDER BY e.id DESC";
+    private static final String SELECT_ID =
+            "SELECT id FROM entrega WHERE LOWER(codigo) = LOWER(?)";
     private static final String SELECT_ITENS =
-            "SELECT p.codigo, p.nome, p.peso, p.volume, p.valor, i.quantidade "
+            "SELECT p.codigo, p.nome, p.peso, p.volume, p.estoque, i.valor_unitario, i.quantidade "
             + "FROM item_entrega i JOIN produto p ON p.id = i.produto_id "
             + "WHERE i.entrega_id = ? ORDER BY i.id";
     private static final String UPDATE_STATUS =
-            "UPDATE entrega SET status = ? WHERE LOWER(codigo) = LOWER(?)";
-    private static final String SELECT_IDS_POR_CODIGO =
-            "SELECT id, endereco_origem_id, endereco_destino_id FROM entrega WHERE LOWER(codigo) = LOWER(?)";
-    private static final String DELETE_ITENS =
-            "DELETE FROM item_entrega WHERE entrega_id = ?";
+            "UPDATE entrega SET status = ? WHERE id = ?";
     private static final String DELETE =
             "DELETE FROM entrega WHERE id = ?";
-    private static final String DELETE_ENDERECO =
-            "DELETE FROM endereco WHERE id = ?";
+
+    private static final String BAIXAR_ESTOQUE =
+            "UPDATE produto SET estoque = estoque - ? WHERE LOWER(codigo) = LOWER(?)";
+    private static final String INSERIR_OU_SOMAR_ITEM =
+            "INSERT INTO item_entrega (entrega_id, produto_id, quantidade, valor_unitario) "
+            + "SELECT ?, id, ?, valor FROM produto WHERE LOWER(codigo) = LOWER(?) "
+            + "ON CONFLICT (entrega_id, produto_id) "
+            + "DO UPDATE SET quantidade = item_entrega.quantidade + EXCLUDED.quantidade";
+    private static final String DEVOLVER_ESTOQUE_DO_ITEM =
+            "UPDATE produto p SET estoque = p.estoque + i.quantidade FROM item_entrega i "
+            + "WHERE i.produto_id = p.id AND i.entrega_id = ? AND LOWER(p.codigo) = LOWER(?)";
+    private static final String DELETE_ITEM =
+            "DELETE FROM item_entrega i USING produto p "
+            + "WHERE p.id = i.produto_id AND i.entrega_id = ? AND LOWER(p.codigo) = LOWER(?)";
+    private static final String DEVOLVER_ESTOQUE_DE_TODOS =
+            "UPDATE produto p SET estoque = p.estoque + i.quantidade FROM item_entrega i "
+            + "WHERE i.produto_id = p.id AND i.entrega_id = ?";
 
     private final ClienteDAOJdbc clienteDAO = new ClienteDAOJdbc();
-    private final EnderecoDAOJdbc enderecoDAO = new EnderecoDAOJdbc();
 
     @Override
     public void salvar(Entrega entrega) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                int remetenteId = idDoCliente(conn, entrega.getRemetente());
-                int destinatarioId = idDoCliente(conn, entrega.getDestinatario());
-                int origemId = enderecoDAO.salvar(conn, entrega.getEnderecoOrigem());
-                int destinoId = enderecoDAO.salvar(conn, entrega.getEnderecoDestino());
-
-                int entregaId;
-                try (PreparedStatement ps = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
-                    ps.setString(1, entrega.getCodigo());
-                    ps.setInt(2, remetenteId);
-                    ps.setInt(3, destinatarioId);
-                    ps.setInt(4, origemId);
-                    ps.setInt(5, destinoId);
-                    ps.setString(6, paraCodigo(entrega.getStatus()));
-                    ps.executeUpdate();
-                    try (ResultSet chaves = ps.getGeneratedKeys()) {
-                        chaves.next();
-                        entregaId = chaves.getInt(1);
-                    }
-                }
-
-                inserirItens(conn, entregaId, entrega);
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
+            executar(conn, INSERT,
+                    entrega.getCodigo(),
+                    entrega.getEnderecoOrigem().getId(),
+                    entrega.getEnderecoDestino().getId(),
+                    entrega.getStatus().name());
         }
     }
 
@@ -107,29 +92,57 @@ public class EntregaDAOJdbc implements EntregaDAO {
     }
 
     @Override
-    public boolean atualizarStatus(Entrega entrega) throws SQLException {
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPDATE_STATUS)) {
-            ps.setString(1, paraCodigo(entrega.getStatus()));
-            ps.setString(2, entrega.getCodigo());
-            return ps.executeUpdate() > 0;
-        }
+    public void adicionarItem(String codigoEntrega, Produto produto, int quantidade) throws SQLException {
+        emTransacao(codigoEntrega, (conn, entregaId) -> {
+            executar(conn, BAIXAR_ESTOQUE, quantidade, produto.getCodigo());
+            executar(conn, INSERIR_OU_SOMAR_ITEM, entregaId, quantidade, produto.getCodigo());
+        });
     }
 
     @Override
-    public boolean atualizarItens(Entrega entrega) throws SQLException {
+    public void removerItem(String codigoEntrega, String codigoProduto) throws SQLException {
+        emTransacao(codigoEntrega, (conn, entregaId) -> {
+            executar(conn, DEVOLVER_ESTOQUE_DO_ITEM, entregaId, codigoProduto);
+            executar(conn, DELETE_ITEM, entregaId, codigoProduto);
+        });
+    }
+
+    @Override
+    public void atualizarStatus(Entrega entrega) throws SQLException {
+        emTransacao(entrega.getCodigo(), (conn, entregaId) ->
+                executar(conn, UPDATE_STATUS, entrega.getStatus().name(), entregaId));
+    }
+
+    @Override
+    public void cancelar(String codigoEntrega) throws SQLException {
+        emTransacao(codigoEntrega, (conn, entregaId) -> {
+            executar(conn, DEVOLVER_ESTOQUE_DE_TODOS, entregaId);
+            executar(conn, UPDATE_STATUS, Entrega.Status.CANCELADA.name(), entregaId);
+        });
+    }
+
+    @Override
+    public boolean remover(String codigoEntrega) throws SQLException {
+        if (buscarPorChave(codigoEntrega) == null) {
+            return false;
+        }
+        emTransacao(codigoEntrega, (conn, entregaId) -> {
+            executar(conn, DEVOLVER_ESTOQUE_DE_TODOS, entregaId);
+            executar(conn, DELETE, entregaId);
+        });
+        return true;
+    }
+
+    private interface Operacao {
+        void executar(Connection conn, int entregaId) throws SQLException;
+    }
+
+    private void emTransacao(String codigoEntrega, Operacao operacao) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                int[] ids = buscarIds(conn, entrega.getCodigo());
-                if (ids == null) {
-                    conn.rollback();
-                    return false;
-                }
-                executarPorId(conn, DELETE_ITENS, ids[0]);
-                inserirItens(conn, ids[0], entrega);
+                operacao.executar(conn, buscarId(conn, codigoEntrega));
                 conn.commit();
-                return true;
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
@@ -137,74 +150,37 @@ public class EntregaDAOJdbc implements EntregaDAO {
         }
     }
 
-    @Override
-    public boolean remover(String codigo) throws SQLException {
-        try (Connection conn = ConnectionFactory.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                int[] ids = buscarIds(conn, codigo);
-                if (ids == null) {
-                    conn.rollback();
-                    return false;
-                }
-                executarPorId(conn, DELETE, ids[0]);
-                executarPorId(conn, DELETE_ENDERECO, ids[1]);
-                executarPorId(conn, DELETE_ENDERECO, ids[2]);
-                conn.commit();
-                return true;
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
-        }
-    }
-
-    private int[] buscarIds(Connection conn, String codigo) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(SELECT_IDS_POR_CODIGO)) {
-            ps.setString(1, codigo);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next()
-                        ? new int[] {rs.getInt("id"), rs.getInt("endereco_origem_id"), rs.getInt("endereco_destino_id")}
-                        : null;
-            }
-        }
-    }
-
-    private void executarPorId(Connection conn, String sql, int id) throws SQLException {
+    private void executar(Connection conn, String sql, Object... parametros) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
+            for (int i = 0; i < parametros.length; i++) {
+                ps.setObject(i + 1, parametros[i]);
+            }
             ps.executeUpdate();
         }
     }
 
-    private void inserirItens(Connection conn, int entregaId, Entrega entrega) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(INSERT_ITEM)) {
-            for (Map.Entry<Produto, Integer> item : entrega.getItens().entrySet()) {
-                ps.setInt(1, entregaId);
-                ps.setInt(2, item.getValue());
-                ps.setString(3, item.getKey().getCodigo());
-                if (ps.executeUpdate() == 0) {
-                    throw new SQLException("Produto não cadastrado: " + item.getKey().getCodigo());
+    private int buscarId(Connection conn, String codigo) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SELECT_ID)) {
+            ps.setString(1, codigo);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException("Entrega não cadastrada: " + codigo);
                 }
+                return rs.getInt("id");
             }
         }
-    }
-
-    private int idDoCliente(Connection conn, Cliente cliente) throws SQLException {
-        int[] ids = clienteDAO.buscarIds(conn, cliente.getDocumento());
-        if (ids == null) {
-            throw new SQLException("Cliente não cadastrado: " + cliente.getDocumento());
-        }
-        return ids[0];
     }
 
     private Entrega mapear(Connection conn, ResultSet rs) throws SQLException {
         Cliente remetente = clienteDAO.buscarPorId(conn, rs.getInt("remetente_id"));
         Cliente destinatario = clienteDAO.buscarPorId(conn, rs.getInt("destinatario_id"));
-        Endereco origem = enderecoDAO.buscarPorId(conn, rs.getInt("endereco_origem_id"));
-        Endereco destino = enderecoDAO.buscarPorId(conn, rs.getInt("endereco_destino_id"));
 
-        Entrega entrega = new Entrega(rs.getString("codigo"), remetente, destinatario, origem, destino);
+        Entrega entrega = new Entrega(
+                rs.getString("codigo"),
+                remetente,
+                destinatario,
+                remetente.buscarEndereco(rs.getInt("endereco_origem_id")),
+                destinatario.buscarEndereco(rs.getInt("endereco_destino_id")));
 
         try (PreparedStatement ps = conn.prepareStatement(SELECT_ITENS)) {
             ps.setInt(1, rs.getInt("id"));
@@ -215,29 +191,13 @@ public class EntregaDAOJdbc implements EntregaDAO {
                             itens.getString("nome"),
                             itens.getDouble("peso"),
                             itens.getDouble("volume"),
-                            itens.getDouble("valor"));
+                            itens.getDouble("valor_unitario"),
+                            itens.getInt("estoque"));
                     entrega.adicionarItem(produto, itens.getInt("quantidade"));
                 }
             }
         }
-
-        String status = rs.getString("status");
-        if ("R".equals(status)) {
-            entrega.marcarRealizada();
-        } else if ("N".equals(status)) {
-            entrega.marcarNaoRealizada();
-        }
+        entrega.restaurarStatus(Entrega.Status.valueOf(rs.getString("status")));
         return entrega;
-    }
-
-    private String paraCodigo(Entrega.Status status) {
-        switch (status) {
-            case REALIZADA:
-                return "R";
-            case NAO_REALIZADA:
-                return "N";
-            default:
-                return "P";
-        }
     }
 }

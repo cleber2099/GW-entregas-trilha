@@ -140,7 +140,85 @@ button.perigo { color: var(--erro-texto); }
 
 .botoes { display: flex; gap: 16px; align-items: center; }
 
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+nav { display: flex; gap: 20px; }
+nav a { color: #fff; text-decoration: none; }
+nav a:hover { text-decoration: underline; }
+
+h3 { margin: 24px 0 8px; }
+.cadastro h3 { margin: 8px 0 0; }
+
+select {
+    font: inherit;
+    padding: 8px 10px;
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    background: var(--superficie);
+    width: 100%;
+}
+
+.busca select { max-width: 420px; }
+
+input.quantidade {
+    font: inherit;
+    width: 80px;
+    padding: 8px 10px;
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+}
+
+.cartao {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    padding: 16px 20px;
+}
+
+.cartao p { margin: 4px 0; }
+.cartao h3 { margin: 0 0 8px; }
+
+.duas-colunas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.botoes form { display: inline; }
+
+.botao.secundario {
+    background: var(--superficie);
+    color: var(--erro-texto);
+    border: 1px solid var(--erro-texto);
+}
+
+.dica { color: var(--suave); font-size: 0.9rem; margin: 4px 0; }
+
+tfoot th { color: var(--texto); }
+
+.status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.status-PENDENTE { background: #fff4d6; color: #8a5a00; }
+.status-EM_TRANSITO { background: #e0ecff; color: #1d4ed8; }
+.status-ENTREGUE { background: var(--sucesso-fundo); color: var(--sucesso-texto); }
+.status-CANCELADA { background: #eceef1; color: var(--suave); }
+
 @media (max-width: 600px) {
-    .linha { grid-template-columns: 1fr; }
+    .linha, .duas-colunas { grid-template-columns: 1fr; }
     .acoes form { margin-left: 8px; }
+    table { font-size: 0.9rem; }
+    th, td { padding: 8px 6px; }
 }

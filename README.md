@@ -1,68 +1,64 @@
 # Sistema de Gerenciamento de Entregas
 
-Aplicação Java que simula o fluxo de gerenciamento de entregas de uma transportadora: cadastro de clientes, produtos, endereços e o controle do ciclo de vida de uma entrega, desde a criação até a confirmação (ou cancelamento).
+Aplicação web em Java que simula o fluxo de gerenciamento de entregas de uma transportadora: cadastro de clientes, produtos, endereços e o controle do ciclo de vida de uma entrega, desde a criação até a confirmação (ou cancelamento).
 
 ## Funcionalidades
 
-- Cadastro de **clientes** e seus **endereços**
-- Cadastro de **produtos**
-- Criação de **entregas** vinculadas a um cliente e um endereço de destino
-- Adição e remoção de itens em uma entrega
-- Cálculo automático do valor total da entrega
-- Controle de status da entrega: `PENDENTE` → `EM_TRANSITO` → `ENTREGUE`, com possibilidade de `CANCELADO`
+- Cadastro de **clientes**, cada um com **um ou mais endereços**
+- Cadastro de **produtos** com controle de **estoque** (a entrega baixa o estoque; cancelar ou excluir devolve)
+- Criação de **entregas** escolhendo um endereço de origem e um de destino (que não podem ser o mesmo)
+- Adição e remoção de produtos em uma entrega pendente
+- Cálculo automático de peso, volume e valor total da entrega (com o preço da época em que o produto foi adicionado)
+- Controle de status: `PENDENTE` → `EM_TRANSITO` → `ENTREGUE`, com possibilidade de `CANCELADA`
 - Regras de negócio que impedem alteração de uma entrega fora do status `PENDENTE`
 
 ## Estrutura do projeto
 
 ```
-src/
-├── controllers/
-│   ├── ClienteController.java
-│   ├── EntregaController.java
-│   └── ProdutoController.java
-├── models/
-│   ├── Cliente.java
-│   ├── Endereco.java
-│   ├── Entrega.java
-│   ├── ItemEntrega.java
-│   └── Produto.java
-├── App.java
-└── Sistema.java
+src/main/
+├── java/
+│   ├── controllers/   servlets: ProdutoController, ClienteController, EntregaController
+│   ├── service/       regras que envolvem o banco: ProdutoService, ClienteService, EntregaService
+│   ├── dao/           acesso ao banco (JDBC)
+│   ├── models/        Cliente, Endereco, Produto, entrega/Entrega, entrega/ItemEntrega
+│   ├── db/            ConnectionFactory
+│   └── util/          Validador
+├── resources/db/schema.sql
+└── webapp/
+    ├── WEB-INF/views/ páginas JSP (produtos/, clientes/, entregas/)
+    ├── WEB-INF/web.xml
+    └── css/estilo.css
 ```
 
-- **models/** — entidades do domínio e regras de negócio. `Entrega` é responsável por gerenciar seus próprios itens (`ItemEntrega`), que não são acessíveis fora do pacote `models`.
-- **controllers/** — orquestram as operações disponíveis ao usuário (cadastro, consulta, etc.), sem acessar diretamente detalhes internos das entidades.
-- **App.java** — ponto de entrada da aplicação.
-- **Sistema.java** — classe central que integra os controllers.
+Camadas no padrão MVC: os **controllers** recebem as requisições, os **services** aplicam as regras usando os **models** e os **DAOs**, e as **views** (JSP) montam o HTML. A explicação completa está em [docs/SISTEMA_WEB.txt](docs/SISTEMA_WEB.txt), e a explicação de cada arquivo do código em [docs/EXPLICACAO_CODIGO.txt](docs/EXPLICACAO_CODIGO.txt).
 
 ## Pré-requisitos
 
-- JDK 8 ou superior instalado ([ajuste esse número para a versão que você está usando])
+- JDK 8 ou superior
+- PostgreSQL com o banco `entregasgw` (usuário e senha padrão: `postgres`)
+- Tomcat 9
 
 ## Como executar
 
-### Pela linha de comando
-
-```bash
-# a partir da raiz do projeto
-javac $(find src -name "*.java")
-java -cp src App
-```
-
-### Pelo VS Code
-
-1. Abra a pasta do projeto no VS Code com a extensão *Extension Pack for Java* instalada.
-2. Abra o arquivo `App.java`.
-3. Clique em **Run** (▷) acima do método `main`, ou pressione `F5`.
+1. Crie as tabelas (isso apaga dados existentes):
+   ```bash
+   psql -U postgres -d entregasgw -f src/main/resources/db/schema.sql
+   ```
+2. Gere o pacote:
+   ```bash
+   ./gradlew war
+   ```
+3. Copie `build/libs/entregasgw.war` para a pasta `webapps` do Tomcat.
+4. Acesse http://localhost:8080/entregasgw/
 
 ## Modelo de domínio
 
 | Classe | Responsabilidade |
 |---|---|
-| `Cliente` | Dados do cliente e seu endereço |
-| `Endereco` | Endereço de entrega |
-| `Produto` | Produto disponível para compra |
-| `Entrega` | Agrega cliente, endereço e itens; controla status e regras de alteração |
+| `Cliente` | Dados do cliente e seus endereços (pelo menos um) |
+| `Endereco` | Endereço de um cliente |
+| `Produto` | Produto que pode ser enviado |
+| `Entrega` | Origem, destino e itens; controla o status e as regras de alteração |
 | `ItemEntrega` | Item de uma entrega (produto + quantidade); gerenciado exclusivamente por `Entrega` |
 
 ## Autor

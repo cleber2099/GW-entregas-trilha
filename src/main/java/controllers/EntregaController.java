@@ -1,317 +1,135 @@
 package controllers;
 
-import java.util.List;
-import java.util.Scanner;
-import models.Cliente;
-import models.Endereco;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import models.entrega.Entrega;
-import models.Produto;
+import service.ClienteService;
 import service.EntregaService;
 import service.ProdutoService;
 import service.ServiceException;
 
-public class EntregaController {
+@WebServlet("/entregas")
+public class EntregaController extends ControllerBase {
+    private final EntregaService service = new EntregaService();
+    private final ClienteService clienteService = new ClienteService();
+    private final ProdutoService produtoService = new ProdutoService();
 
-    private EntregaService service = new EntregaService();
-    private Scanner scanner;
-    private ClienteController clienteController;
-    private ProdutoService produtoService = new ProdutoService();
-
-    public EntregaController(Scanner scanner, ClienteController clienteController) {
-        this.scanner = scanner;
-        this.clienteController = clienteController;
-    }
-
-    public void menu() {
-        int opcao;
-        do {
-            System.out.println("\n--- Entregas ---");
-            System.out.println("1 - Cadastrar");
-            System.out.println("2 - Listar todas");
-            System.out.println("3 - Buscar por código");
-            System.out.println("4 - Adicionar produto");
-            System.out.println("5 - Remover produto");
-            System.out.println("6 - Atualizar status (realizada / não realizada)");
-            System.out.println("7 - Excluir");
-            System.out.println("0 - Voltar");
-            System.out.print("Escolha uma opção: ");
-            opcao = lerInteiro();
-
-            switch (opcao) {
-                case 1: cadastrar(); break;
-                case 2: listar(); break;
-                case 3: buscarInterativo(); break;
-                case 4: adicionarItem(); break;
-                case 5: removerItem(); break;
-                case 6: atualizarStatus(); break;
-                case 7: remover(); break;
-                case 0: break;
-                default: System.out.println("Opção inválida.");
-            }
-        } while (opcao != 0);
-    }
-
-    private void cadastrar() {
-        System.out.println("\n-- Cadastro de Entrega --");
-
-        System.out.print("Código da entrega: ");
-        String codigo = scanner.nextLine();
-        if (codigo.trim().isEmpty()) {
-            System.out.println("O código não pode ficar vazio.");
-            return;
-        }
-        if (buscarPorCodigo(codigo) != null) {
-            System.out.println("Já existe uma entrega com esse código.");
-            return;
-        }
-
-        Cliente remetente = pedirCliente("Remetente");
-        if (remetente == null) {
-            return;
-        }
-        Cliente destinatario = pedirCliente("Destinatário");
-        if (destinatario == null) {
-            return;
-        }
-
-        Entrega entrega;
-        try {
-            Endereco origem = escolherEndereco("origem", remetente);
-            Endereco destino = escolherEndereco("destino", destinatario);
-            entrega = new Entrega(codigo, remetente, destinatario, origem, destino);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Erro: " + e.getMessage());
-            return;
-        }
-
-        lerItens(entrega);
-
-        if (entrega.estaVazia()) {
-            System.out.println("A entrega precisa ter ao menos um item. Cadastro cancelado.");
-            return;
-        }
-
-        try {
-            service.cadastrar(entrega);
-            System.out.println("Entrega cadastrada com sucesso!");
-        } catch (IllegalArgumentException | ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private void listar() {
-        System.out.println("\n-- Lista de Entregas --");
-        List<Entrega> entregas;
-        try {
-            entregas = service.listar();
-        } catch (ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
-            return;
-        }
-        if (entregas.isEmpty()) {
-            System.out.println("Nenhuma entrega cadastrada.");
-            return;
-        }
-        for (Entrega e : entregas) {
-            System.out.println(e);
-            System.out.println("------------------------");
-        }
-    }
-
-    public Entrega buscarPorCodigo(String codigo) {
-        if (codigo == null || codigo.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return service.buscarPorCodigo(codigo);
-        } catch (ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private void buscarInterativo() {
-        System.out.print("Informe o código da entrega: ");
-        Entrega entrega = buscarPorCodigo(scanner.nextLine());
-        if (entrega != null) {
-            System.out.println(entrega);
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String acao = req.getParameter("acao");
+        if ("novo".equals(acao)) {
+            novo(req, resp);
+        } else if ("detalhe".equals(acao)) {
+            detalhe(req, resp);
         } else {
-            System.out.println("Entrega não encontrada.");
+            listar(req, resp);
         }
     }
 
-    private void adicionarItem() {
-        Entrega entrega = pedirEntrega();
-        if (entrega == null) {
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String acao = req.getParameter("acao");
+        String codigo = req.getParameter("codigo");
+        if ("salvar".equals(acao)) {
+            salvar(req, resp);
             return;
         }
-        if (entrega.getStatus() != Entrega.Status.PENDENTE) {
-            System.out.println("Erro: A entrega não pode ser alterada no status " + entrega.getStatus() + ".");
-            return;
-        }
-        lerItens(entrega);
-        salvarItens(entrega);
-    }
-
-    private void removerItem() {
-        Entrega entrega = pedirEntrega();
-        if (entrega == null) {
+        if ("remover".equals(acao)) {
+            remover(req, resp, codigo);
             return;
         }
 
-        System.out.print("Código do produto a remover: ");
-        String codigoProduto = scanner.nextLine();
-        boolean removido = entrega.removerItem(codigoProduto);
-        if (removido) {
-            if (salvarItens(entrega)) {
-                System.out.println("Produto removido com sucesso!");
+        try {
+            if ("adicionarItem".equals(acao)) {
+                service.adicionarItem(codigo, req.getParameter("produto"),
+                        lerInteiro(req.getParameter("quantidade"), "Quantidade"));
+                voltarAoDetalhe(req, resp, codigo, "Produto adicionado.", false);
+            } else if ("removerItem".equals(acao)) {
+                service.removerItem(codigo, req.getParameter("produto"));
+                voltarAoDetalhe(req, resp, codigo, "Produto removido.", false);
+            } else if ("iniciarTransporte".equals(acao)) {
+                service.iniciarTransporte(codigo);
+                voltarAoDetalhe(req, resp, codigo, "Entrega saiu para transporte.", false);
+            } else if ("confirmarEntrega".equals(acao)) {
+                service.confirmarEntrega(codigo);
+                voltarAoDetalhe(req, resp, codigo, "Entrega confirmada.", false);
+            } else if ("cancelar".equals(acao)) {
+                service.cancelar(codigo);
+                voltarAoDetalhe(req, resp, codigo, "Entrega cancelada.", false);
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Ação inválida.");
             }
-        } else if (entrega.getStatus() == Entrega.Status.PENDENTE) {
-            System.out.println("Produto não encontrado nesta entrega.");
+        } catch (IllegalArgumentException | IllegalStateException | ServiceException e) {
+            voltarAoDetalhe(req, resp, codigo, e.getMessage(), true);
         }
     }
 
-    private void atualizarStatus() {
-        Entrega entrega = pedirEntrega();
-        if (entrega == null) {
-            return;
-        }
-
-        System.out.println("Status atual: " + entrega.getStatus());
-        System.out.println("1 - Marcar como realizada");
-        System.out.println("2 - Marcar como não realizada");
-        System.out.println("0 - Voltar");
-        System.out.print("Escolha uma opção: ");
-        int opcao = lerInteiro();
-
-        Entrega.Status anterior = entrega.getStatus();
-        if (opcao == 1) {
-            entrega.marcarRealizada();
-        } else if (opcao == 2) {
-            entrega.marcarNaoRealizada();
-        } else if (opcao == 0) {
-            return;
-        } else {
-            System.out.println("Opção inválida.");
-            return;
-        }
-        if (entrega.getStatus() == anterior) {
-            return;
-        }
+    private void listar(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            service.atualizarStatus(entrega);
-            System.out.println("Status atualizado para " + entrega.getStatus() + ".");
+            req.setAttribute("entregas", service.listar());
         } catch (ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
+            req.setAttribute("erro", e.getMessage());
         }
+        mostrar(req, resp, "entregas/lista.jsp");
     }
 
-    private void remover() {
-        Entrega entrega = pedirEntrega();
-        if (entrega == null) {
-            return;
-        }
+    private void novo(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            service.remover(entrega.getCodigo());
-            System.out.println("Entrega removida com sucesso!");
-        } catch (IllegalArgumentException | ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private boolean salvarItens(Entrega entrega) {
-        try {
-            service.atualizarItens(entrega);
-            return true;
+            req.setAttribute("clientes", clienteService.listar());
         } catch (ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
-            return false;
+            req.setAttribute("erro", e.getMessage());
         }
+        mostrar(req, resp, "entregas/form.jsp");
     }
 
-    private Cliente pedirCliente(String papel) {
-        System.out.print("CPF/CNPJ do " + papel.toLowerCase() + ": ");
-        Cliente cliente = clienteController.buscarPorDocumento(scanner.nextLine());
-        if (cliente == null) {
-            System.out.println(papel + " não encontrado. Cadastre-o primeiro.");
-        }
-        return cliente;
-    }
-
-    private Endereco escolherEndereco(String tipo, Cliente cliente) {
-        Endereco endereco = cliente.getEndereco();
-        System.out.println("Endereço de " + tipo + " (cadastro de " + cliente.getNome() + "): " + endereco.formatar());
-        System.out.print("Usar outro endereço de " + tipo + "? (s/n): ");
-        if (scanner.nextLine().equalsIgnoreCase("s")) {
-            return lerEndereco();
-        }
-        return endereco;
-    }
-
-    private Entrega pedirEntrega() {
-        System.out.print("Código da entrega: ");
-        Entrega entrega = buscarPorCodigo(scanner.nextLine());
-        if (entrega == null) {
-            System.out.println("Entrega não encontrada.");
-        }
-        return entrega;
-    }
-
-    private void lerItens(Entrega entrega) {
-        while (true) {
-            System.out.print("Código do produto (vazio para finalizar): ");
-            String codigo = scanner.nextLine();
-            if (codigo.trim().isEmpty()) {
+    private void detalhe(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            Entrega entrega = service.buscarPorCodigo(req.getParameter("codigo"));
+            if (entrega == null) {
+                redirecionar(req, resp, "/entregas", "Entrega não encontrada.", true);
                 return;
             }
-
-            Produto produto;
-            try {
-                produto = produtoService.buscarPorCodigo(codigo);
-            } catch (ServiceException e) {
-                System.out.println("Erro: " + e.getMessage());
-                continue;
+            req.setAttribute("entrega", entrega);
+            if (entrega.podeAlterarItens()) {
+                req.setAttribute("produtos", produtoService.listar());
             }
-            if (produto == null) {
-                System.out.println("Produto não encontrado.");
-                continue;
-            }
-
-            System.out.print("Quantidade: ");
-            int quantidade = lerInteiro();
-            if (quantidade <= 0) {
-                System.out.println("A quantidade precisa ser maior que zero.");
-                continue;
-            }
-
-            entrega.adicionarItem(produto, quantidade);
-            System.out.println("Produto adicionado: " + produto.getNome() + " x" + quantidade);
+            mostrar(req, resp, "entregas/detalhe.jsp");
+        } catch (IllegalArgumentException | ServiceException e) {
+            redirecionar(req, resp, "/entregas", e.getMessage(), true);
         }
     }
 
-    private Endereco lerEndereco() {
-        System.out.print("Rua: ");
-        String rua = scanner.nextLine();
-        System.out.print("Número: ");
-        String numero = scanner.nextLine();
-        System.out.print("Bairro: ");
-        String bairro = scanner.nextLine();
-        System.out.print("Cidade: ");
-        String cidade = scanner.nextLine();
-        System.out.print("Estado: ");
-        String estado = scanner.nextLine();
-        System.out.print("CEP: ");
-        String cep = scanner.nextLine();
-        return new Endereco(rua, cidade, estado, cep, numero, bairro);
+    private void salvar(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String codigo = req.getParameter("codigo");
+        try {
+            int origemId = lerInteiro(req.getParameter("origem"), "Endereço de origem");
+            int destinoId = lerInteiro(req.getParameter("destino"), "Endereço de destino");
+            Entrega entrega = service.cadastrar(codigo, origemId, destinoId);
+            voltarAoDetalhe(req, resp, entrega.getCodigo(),
+                    "Entrega cadastrada! Agora adicione os produtos.", false);
+        } catch (IllegalArgumentException | ServiceException e) {
+            req.setAttribute("erro", e.getMessage());
+            req.setAttribute("form", req.getParameterMap());
+            novo(req, resp);
+        }
     }
 
-    private int lerInteiro() {
-        while (!scanner.hasNextInt()) {
-            scanner.nextLine();
-            System.out.print("Entrada inválida. Digite um número: ");
+    private void remover(HttpServletRequest req, HttpServletResponse resp, String codigo) throws IOException {
+        try {
+            service.remover(codigo);
+            redirecionar(req, resp, "/entregas", "Entrega removida com sucesso!", false);
+        } catch (IllegalArgumentException | IllegalStateException | ServiceException e) {
+            voltarAoDetalhe(req, resp, codigo, e.getMessage(), true);
         }
-        int numero = scanner.nextInt();
-        scanner.nextLine();
-        return numero;
+    }
+
+    private void voltarAoDetalhe(HttpServletRequest req, HttpServletResponse resp, String codigo,
+                                 String mensagem, boolean erro) throws IOException {
+        redirecionar(req, resp, "/entregas?acao=detalhe&codigo=" + url(codigo), mensagem, erro);
     }
 }

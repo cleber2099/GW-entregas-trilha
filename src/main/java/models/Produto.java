@@ -8,13 +8,15 @@ public class Produto {
     private double peso;
     private double volume;
     private double valor;
+    private int estoque;
 
-    public Produto(String codigo, String nome, double peso, double volume, double valor) {
+    public Produto(String codigo, String nome, double peso, double volume, double valor, int estoque) {
         setCodigo(codigo);
         setNome(nome);
         setPeso(peso);
         setVolume(volume);
         setValor(valor);
+        setEstoque(estoque);
     }
 
     public String getCodigo() {
@@ -62,10 +64,24 @@ public class Produto {
         this.valor = valor;
     }
 
+    public int getEstoque() {
+        return estoque;
+    }
+
+    public void setEstoque(int estoque) {
+        Validador.exigirMinimo(estoque, 0, "O estoque não pode ser negativo.");
+        this.estoque = estoque;
+    }
+
+    public void retirarEstoque(int quantidade) {
+        if (quantidade > estoque) {
+            throw new IllegalArgumentException("Estoque insuficiente: há " + estoque + " unidade(s) de " + nome + ".");
+        }
+        estoque -= quantidade;
+    }
+
     @Override
     public String toString() {
-        return "Produto: " + nome + " (" + codigo + ") | Peso: " + String.format("%.2f", peso)
-                + " kg | Volume: " + String.format("%.3f", volume)
-                + " m³ | Valor: R$" + String.format("%.2f", valor);
+        return nome + " (" + codigo + ")";
     }
 }

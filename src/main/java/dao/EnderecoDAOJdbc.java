@@ -5,55 +5,66 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import models.Endereco;
 
-/**
- * Auxiliar dos DAOs de cliente e entrega: o endereço é sempre gravado
- * junto com eles, na mesma conexão/transação.
- */
 class EnderecoDAOJdbc {
     private static final String INSERT =
-            "INSERT INTO endereco (rua, numero, bairro, cidade, estado, cep) VALUES (?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_POR_ID =
-            "SELECT rua, numero, bairro, cidade, estado, cep FROM endereco WHERE id = ?";
+            "INSERT INTO endereco (cliente_id, rua, numero, bairro, cidade, estado, cep) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    private static final String SELECT_POR_CLIENTE =
+            "SELECT id, rua, numero, bairro, cidade, estado, cep FROM endereco WHERE cliente_id = ? ORDER BY id";
+    private static final String DELETE =
+            "DELETE FROM endereco WHERE id = ?";
 
-    int salvar(Connection conn, Endereco endereco) throws SQLException {
+    int salvar(Connection conn, int clienteId, Endereco endereco) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
-            preencher(ps, endereco);
+            ps.setInt(1, clienteId);
+            ps.setString(2, endereco.getRua());
+            ps.setString(3, endereco.getNumero());
+            ps.setString(4, endereco.getBairro());
+            ps.setString(5, endereco.getCidade());
+            ps.setString(6, endereco.getEstado());
+            ps.setString(7, endereco.getCep());
             ps.executeUpdate();
             try (ResultSet chaves = ps.getGeneratedKeys()) {
                 chaves.next();
-                return chaves.getInt(1);
+                endereco.setId(chaves.getInt(1));
+                return endereco.getId();
             }
         }
     }
 
-    Endereco buscarPorId(Connection conn, int id) throws SQLException {
-        try (PreparedStatement ps = conn.prepareStatement(SELECT_POR_ID)) {
-            ps.setInt(1, id);
+    List<Endereco> listarPorCliente(Connection conn, int clienteId) throws SQLException {
+        List<Endereco> enderecos = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(SELECT_POR_CLIENTE)) {
+            ps.setInt(1, clienteId);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? mapear(rs) : null;
+                while (rs.next()) {
+                    enderecos.add(mapear(rs));
+                }
             }
         }
+        return enderecos;
     }
 
-    private void preencher(PreparedStatement ps, Endereco endereco) throws SQLException {
-        ps.setString(1, endereco.getRua());
-        ps.setString(2, endereco.getNumero());
-        ps.setString(3, endereco.getBairro());
-        ps.setString(4, endereco.getCidade());
-        ps.setString(5, endereco.getEstado());
-        ps.setString(6, endereco.getCep());
+    void remover(Connection conn, int enderecoId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(DELETE)) {
+            ps.setInt(1, enderecoId);
+            ps.executeUpdate();
+        }
     }
 
     private Endereco mapear(ResultSet rs) throws SQLException {
-        return new Endereco(
+        Endereco endereco = new Endereco(
                 rs.getString("rua"),
                 rs.getString("cidade"),
                 rs.getString("estado"),
                 rs.getString("cep"),
                 rs.getString("numero"),
                 rs.getString("bairro"));
+        endereco.setId(rs.getInt("id"));
+        return endereco;
     }
 }

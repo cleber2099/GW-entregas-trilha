@@ -1,0 +1,25 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:setLocale value="pt_BR"/>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GW Entregas</title>
+    <link rel="stylesheet" href="${ctx}/css/estilo.css">
+</head>
+<body>
+<header>
+    <h1>GW Entregas</h1>
+    <nav>
+        <a href="${ctx}/entregas">Entregas</a>
+        <a href="${ctx}/clientes">Clientes</a>
+        <a href="${ctx}/produtos">Produtos</a>
+    </nav>
+</header>
+<main>
+<c:if test="${not empty sucesso}"><p class="alerta sucesso"><c:out value="${sucesso}"/></p></c:if>
+<c:if test="${not empty erro}"><p class="alerta erro"><c:out value="${erro}"/></p></c:if>

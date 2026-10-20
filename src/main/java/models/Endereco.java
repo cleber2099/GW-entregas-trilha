@@ -3,6 +3,7 @@ package models;
 import util.Validador;
 
 public class Endereco {
+    private Integer id;
     private String rua;
     private String cidade;
     private String estado;
@@ -17,6 +18,14 @@ public class Endereco {
         setCep(cep);
         setNumero(numero);
         setBairro(bairro);
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getRua() {
@@ -43,7 +52,10 @@ public class Endereco {
 
     public void setEstado(String estado) {
         Validador.exigirTexto(estado, "O estado é obrigatório.");
-        this.estado = estado;
+        if (!estado.trim().matches("[A-Za-z]{2}")) {
+            throw new IllegalArgumentException("O estado deve ser a sigla com 2 letras (ex.: SP).");
+        }
+        this.estado = estado.trim().toUpperCase();
     }
 
     public String getCep() {
@@ -84,6 +96,5 @@ public class Endereco {
     public String toString() {
         return formatar();
     }
-    
 
 }

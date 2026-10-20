@@ -1,151 +1,142 @@
 package controllers;
 
-import java.util.List;
-import java.util.Scanner;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import models.Cliente;
 import models.Endereco;
 import service.ClienteService;
 import service.ServiceException;
 
-public class ClienteController {
+@WebServlet("/clientes")
+public class ClienteController extends ControllerBase {
+    private final ClienteService service = new ClienteService();
 
-    private ClienteService service = new ClienteService();
-    private Scanner scanner;
-
-    public ClienteController(Scanner scanner) {
-        this.scanner = scanner;
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String acao = req.getParameter("acao");
+        if ("novo".equals(acao)) {
+            mostrar(req, resp, "clientes/form.jsp");
+        } else if ("editar".equals(acao)) {
+            req.setAttribute("edicao", true);
+            mostrarCliente(req, resp, "clientes/form.jsp");
+        } else if ("detalhe".equals(acao)) {
+            mostrarCliente(req, resp, "clientes/detalhe.jsp");
+        } else {
+            listar(req, resp);
+        }
     }
 
-    public void menu() {
-        int opcao;
-        do {
-            System.out.println("\n--- Clientes ---");
-            System.out.println("1 - Cadastrar");
-            System.out.println("2 - Listar todos");
-            System.out.println("3 - Buscar por CPF/CNPJ");
-            System.out.println("4 - Editar");
-            System.out.println("5 - Remover");
-            System.out.println("0 - Voltar");
-            System.out.print("Escolha uma opção: ");
-            opcao = Integer.parseInt(scanner.nextLine());
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String acao = req.getParameter("acao");
+        if ("salvar".equals(acao)) {
+            salvar(req, resp);
+        } else if ("remover".equals(acao)) {
+            remover(req, resp);
+        } else if ("adicionarEndereco".equals(acao)) {
+            adicionarEndereco(req, resp);
+        } else if ("removerEndereco".equals(acao)) {
+            removerEndereco(req, resp);
+        } else {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Ação inválida.");
+        }
+    }
 
-            switch (opcao) {
-                case 1: cadastrar(); break;
-                case 2: listar(); break;
-                case 3: buscarInterativo(); break;
-                case 4: editar(); break;
-                case 5: remover(); break;
-                case 0: break;
-                default: System.out.println("Opção inválida.");
+    private void listar(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            req.setAttribute("clientes", service.listar());
+        } catch (ServiceException e) {
+            req.setAttribute("erro", e.getMessage());
+        }
+        mostrar(req, resp, "clientes/lista.jsp");
+    }
+
+    private void mostrarCliente(HttpServletRequest req, HttpServletResponse resp, String pagina)
+            throws ServletException, IOException {
+        try {
+            Cliente cliente = service.buscarPorDocumento(req.getParameter("documento"));
+            if (cliente == null) {
+                redirecionar(req, resp, "/clientes", "Cliente não encontrado.", true);
+                return;
             }
-        } while (opcao != 0);
-    }
-
-    private void cadastrar() {
-        System.out.println("\n-- Cadastro de Cliente (remetente/destinatário) --");
-        System.out.print("Nome: ");
-        String nome = scanner.nextLine();
-        System.out.print("CPF/CNPJ: ");
-        String documento = scanner.nextLine();
-        System.out.print("Telefone: ");
-        String telefone = scanner.nextLine();
-
-        try {
-            Endereco endereco = lerEndereco();
-            service.cadastrar(nome, endereco, telefone, documento);
-            System.out.println("Cliente cadastrado com sucesso!");
+            req.setAttribute("cliente", cliente);
+            mostrar(req, resp, pagina);
         } catch (IllegalArgumentException | ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
+            redirecionar(req, resp, "/clientes", e.getMessage(), true);
         }
     }
 
-    private void listar() {
-        System.out.println("\n-- Lista de Clientes --");
-        List<Cliente> clientes;
+    private void salvar(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        boolean edicao = "true".equals(req.getParameter("edicao"));
+        String nome = req.getParameter("nome");
+        String telefone = req.getParameter("telefone");
+        String documento = req.getParameter("documento");
         try {
-            clientes = service.listar();
-        } catch (ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
-            return;
-        }
-        if (clientes.isEmpty()) {
-            System.out.println("Nenhum cliente cadastrado.");
-            return;
-        }
-        for (Cliente c : clientes) {
-            System.out.println(c);
-        }
-    }
-
-    public Cliente buscarPorDocumento(String documento) {
-        if (documento == null || documento.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return service.buscarPorDocumento(documento);
-        } catch (ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private void buscarInterativo() {
-        System.out.print("Informe o CPF/CNPJ: ");
-        Cliente cliente = buscarPorDocumento(scanner.nextLine());
-        System.out.println(cliente != null ? cliente : "Cliente não encontrado.");
-    }
-
-    private void editar() {
-        System.out.print("CPF/CNPJ do cliente a editar: ");
-        Cliente cliente = buscarPorDocumento(scanner.nextLine());
-        if (cliente == null) {
-            System.out.println("Cliente não encontrado.");
-            return;
-        }
-        System.out.print("Novo nome (" + cliente.getNome() + "): ");
-        String nome = scanner.nextLine();
-        System.out.print("Novo telefone (" + cliente.getTelefone() + "): ");
-        String telefone = scanner.nextLine();
-        System.out.print("Deseja atualizar o endereço? (s/n): ");
-        boolean atualizarEndereco = scanner.nextLine().equalsIgnoreCase("s");
-
-        try {
-            Endereco endereco = atualizarEndereco ? lerEndereco() : null;
-            service.editar(cliente.getDocumento(), nome, telefone, endereco);
-            System.out.println("Cliente atualizado com sucesso!");
+            if (edicao) {
+                Cliente cliente = service.editar(documento, nome, telefone);
+                redirecionar(req, resp, detalhe(cliente), "Cliente atualizado com sucesso!", false);
+            } else {
+                Cliente cliente = service.cadastrar(nome, telefone, documento, lerEndereco(req));
+                redirecionar(req, resp, detalhe(cliente), "Cliente cadastrado com sucesso!", false);
+            }
         } catch (IllegalArgumentException | ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
+            req.setAttribute("erro", e.getMessage());
+            req.setAttribute("edicao", edicao);
+            req.setAttribute("form", req.getParameterMap());
+            mostrar(req, resp, "clientes/form.jsp");
         }
     }
 
-    private void remover() {
-        System.out.print("CPF/CNPJ do cliente a remover: ");
-        Cliente cliente = buscarPorDocumento(scanner.nextLine());
-        if (cliente == null) {
-            System.out.println("Cliente não encontrado.");
-            return;
-        }
+    private void remover(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            service.remover(cliente.getDocumento());
-            System.out.println("Cliente removido com sucesso!");
+            service.remover(req.getParameter("documento"));
+            redirecionar(req, resp, "/clientes", "Cliente removido com sucesso!", false);
         } catch (IllegalArgumentException | ServiceException e) {
-            System.out.println("Erro: " + e.getMessage());
+            redirecionar(req, resp, "/clientes", e.getMessage(), true);
         }
     }
 
-    private Endereco lerEndereco() {
-        System.out.print("Rua: ");
-        String rua = scanner.nextLine();
-        System.out.print("Número: ");
-        String numero = scanner.nextLine();
-        System.out.print("Bairro: ");
-        String bairro = scanner.nextLine();
-        System.out.print("Cidade: ");
-        String cidade = scanner.nextLine();
-        System.out.print("Estado: ");
-        String estado = scanner.nextLine();
-        System.out.print("CEP: ");
-        String cep = scanner.nextLine();
-        return new Endereco(rua, cidade, estado, cep, numero, bairro);
+    private void adicionarEndereco(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String documento = req.getParameter("documento");
+        try {
+            service.adicionarEndereco(documento, lerEndereco(req));
+            redirecionar(req, resp, "/clientes?acao=detalhe&documento=" + url(documento),
+                    "Endereço adicionado com sucesso!", false);
+        } catch (IllegalArgumentException | ServiceException e) {
+            req.setAttribute("erro", e.getMessage());
+            req.setAttribute("form", req.getParameterMap());
+            mostrarCliente(req, resp, "clientes/detalhe.jsp");
+        }
+    }
+
+    private void removerEndereco(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String documento = req.getParameter("documento");
+        String voltar = "/clientes?acao=detalhe&documento=" + url(documento);
+        try {
+            service.removerEndereco(documento, lerInteiro(req.getParameter("enderecoId"), "Endereço"));
+            redirecionar(req, resp, voltar, "Endereço removido com sucesso!", false);
+        } catch (IllegalArgumentException | ServiceException e) {
+            redirecionar(req, resp, voltar, e.getMessage(), true);
+        }
+    }
+
+    private Endereco lerEndereco(HttpServletRequest req) {
+        return new Endereco(
+                req.getParameter("rua"),
+                req.getParameter("cidade"),
+                req.getParameter("estado"),
+                req.getParameter("cep"),
+                req.getParameter("numero"),
+                req.getParameter("bairro"));
+    }
+
+    private String detalhe(Cliente cliente) {
+        return "/clientes?acao=detalhe&documento=" + cliente.getDocumento();
     }
 }

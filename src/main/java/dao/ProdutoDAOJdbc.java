@@ -11,14 +11,16 @@ import db.ConnectionFactory;
 import models.Produto;
 
 public class ProdutoDAOJdbc implements ProdutoDAO {
+    private static final String COLUNAS = "SELECT codigo, nome, peso, volume, valor, estoque FROM produto ";
+
     private static final String INSERT =
-            "INSERT INTO produto (codigo, nome, peso, volume, valor) VALUES (?, ?, ?, ?, ?)";
+            "INSERT INTO produto (codigo, nome, peso, volume, valor, estoque) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String SELECT_POR_CODIGO =
-            "SELECT codigo, nome, peso, volume, valor FROM produto WHERE LOWER(codigo) = LOWER(?)";
+            COLUNAS + "WHERE LOWER(codigo) = LOWER(?)";
     private static final String SELECT_TODOS =
-            "SELECT codigo, nome, peso, volume, valor FROM produto ORDER BY nome";
+            COLUNAS + "ORDER BY nome";
     private static final String UPDATE =
-            "UPDATE produto SET nome = ?, peso = ?, volume = ?, valor = ? WHERE LOWER(codigo) = LOWER(?)";
+            "UPDATE produto SET nome = ?, peso = ?, volume = ?, valor = ?, estoque = ? WHERE LOWER(codigo) = LOWER(?)";
     private static final String DELETE =
             "DELETE FROM produto WHERE LOWER(codigo) = LOWER(?)";
 
@@ -31,6 +33,7 @@ public class ProdutoDAOJdbc implements ProdutoDAO {
             ps.setDouble(3, produto.getPeso());
             ps.setDouble(4, produto.getVolume());
             ps.setDouble(5, produto.getValor());
+            ps.setInt(6, produto.getEstoque());
             ps.executeUpdate();
         }
     }
@@ -60,15 +63,16 @@ public class ProdutoDAOJdbc implements ProdutoDAO {
     }
 
     @Override
-    public boolean atualizar(Produto produto) throws SQLException {
+    public void atualizar(Produto produto) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement ps = conn.prepareStatement(UPDATE)) {
             ps.setString(1, produto.getNome());
             ps.setDouble(2, produto.getPeso());
             ps.setDouble(3, produto.getVolume());
             ps.setDouble(4, produto.getValor());
-            ps.setString(5, produto.getCodigo());
-            return ps.executeUpdate() > 0;
+            ps.setInt(5, produto.getEstoque());
+            ps.setString(6, produto.getCodigo());
+            ps.executeUpdate();
         }
     }
 
@@ -87,6 +91,7 @@ public class ProdutoDAOJdbc implements ProdutoDAO {
                 rs.getString("nome"),
                 rs.getDouble("peso"),
                 rs.getDouble("volume"),
-                rs.getDouble("valor"));
+                rs.getDouble("valor"),
+                rs.getInt("estoque"));
     }
 }
