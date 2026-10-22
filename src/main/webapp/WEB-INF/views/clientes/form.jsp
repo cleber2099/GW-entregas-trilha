@@ -15,11 +15,13 @@
     </label>
     <div class="linha">
         <label>CPF/CNPJ
-            <input type="text" name="documento" required maxlength="18"
+            <input type="text" name="documento" required maxlength="14" inputmode="numeric"
+                   pattern="\d{11}|\d{14}" title="CPF com 11 dígitos ou CNPJ com 14 dígitos (somente números)"
+                   oninput="this.value=this.value.replace(/\D/g,'')"
                    value="<c:out value='${vDocumento}'/>" ${edicao ? 'readonly' : ''}>
         </label>
         <label>Telefone
-            <input type="text" name="telefone" required maxlength="20" value="<c:out value='${vTelefone}'/>">
+            <input type="text" name="telefone" required maxlength="11" inputmode="numeric" pattern="\d{10,11}" title="DDD + número, 10 ou 11 dígitos (somente números)" oninput="this.value=this.value.replace(/\D/g,'')" value="<c:out value='${vTelefone}'/>">
         </label>
     </div>
 

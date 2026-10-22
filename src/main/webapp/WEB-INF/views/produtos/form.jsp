@@ -22,13 +22,13 @@
     </label>
     <div class="linha">
         <label>Peso (kg)
-            <input type="text" name="peso" required inputmode="decimal" value="<c:out value='${vPeso}'/>">
+            <input type="text" name="peso" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vPeso}'/>">
         </label>
         <label>Volume (m³)
-            <input type="text" name="volume" required inputmode="decimal" value="<c:out value='${vVolume}'/>">
+            <input type="text" name="volume" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vVolume}'/>">
         </label>
         <label>Valor (R$)
-            <input type="text" name="valor" required inputmode="decimal" value="<c:out value='${vValor}'/>">
+            <input type="text" name="valor" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vValor}'/>">
         </label>
         <label>Estoque (unidades)
             <input type="number" name="estoque" required min="0" step="1" value="<c:out value='${vEstoque}'/>">

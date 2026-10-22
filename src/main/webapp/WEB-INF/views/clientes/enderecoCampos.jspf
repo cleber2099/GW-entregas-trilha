@@ -10,7 +10,7 @@
         <input type="text" name="bairro" required maxlength="100" value="<c:out value='${form.bairro[0]}'/>">
     </label>
     <label>CEP
-        <input type="text" name="cep" required maxlength="10" placeholder="00000-000" value="<c:out value='${form.cep[0]}'/>">
+        <input type="text" name="cep" required maxlength="8" placeholder="00000000" inputmode="numeric" pattern="\d{8}" title="CEP com 8 dígitos (somente números)" oninput="this.value=this.value.replace(/\D/g,'')" value="<c:out value='${form.cep[0]}'/>">
     </label>
 </div>
 <div class="linha">
@@ -18,6 +18,11 @@
         <input type="text" name="cidade" required maxlength="100" value="<c:out value='${form.cidade[0]}'/>">
     </label>
     <label>Estado
-        <input type="text" name="estado" required maxlength="2" placeholder="SP" value="<c:out value='${form.estado[0]}'/>">
+        <select name="estado" required>
+            <option value="">Selecione</option>
+            <c:forTokens var="uf" items="AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MT,MS,MG,PA,PB,PR,PE,PI,RJ,RN,RS,RO,RR,SC,SP,SE,TO" delims=",">
+                <option value="${uf}" ${form.estado[0] == uf ? 'selected' : ''}>${uf}</option>
+            </c:forTokens>
+        </select>
     </label>
 </div>
