@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'war'
+    id 'org.gretty' version '3.1.4'
 }
 
 group = 'br.com.entregasgw'
@@ -28,4 +29,10 @@ dependencies {
     providedCompile 'javax.servlet.jsp:javax.servlet.jsp-api:2.3.3'
     implementation 'org.postgresql:postgresql:42.7.4'
     implementation 'javax.servlet:jstl:1.2'
+}
+
+gretty {
+    servletContainer = 'tomcat9'
+    contextPath = '/entregasgw'
+    httpPort = 8080
 }

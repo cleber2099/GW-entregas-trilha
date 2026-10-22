@@ -119,6 +119,13 @@ public class ClienteDAOJdbc implements ClienteDAO {
     }
 
     @Override
+    public void atualizarEndereco(Endereco endereco) throws SQLException {
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            enderecoDAO.atualizar(conn, endereco);
+        }
+    }
+
+    @Override
     public void removerEndereco(int enderecoId) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
             enderecoDAO.remover(conn, enderecoId);

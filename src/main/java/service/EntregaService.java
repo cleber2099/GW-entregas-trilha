@@ -1,6 +1,7 @@
 package service;
 
 import java.sql.SQLException;
+import java.util.UUID;
 
 import dao.DAOFactory;
 import dao.EntregaDAO;
@@ -23,9 +24,10 @@ public class EntregaService extends ServiceBase<Entrega, String, EntregaDAO> {
         this.produtoService = produtoService;
     }
 
-    public Entrega cadastrar(String codigo, int origemId, int destinoId) {
+    public Entrega cadastrar(int origemId, int destinoId) {
         Cliente remetente = donoDoEndereco(origemId);
         Cliente destinatario = donoDoEndereco(destinoId);
+        String codigo = "ENT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         Entrega entrega = new Entrega(codigo, remetente, destinatario,
                 remetente.buscarEndereco(origemId), destinatario.buscarEndereco(destinoId));
         cadastrarNovo(entrega, entrega.getCodigo(), "Já existe uma entrega com esse código.");

@@ -15,6 +15,8 @@ class EnderecoDAOJdbc {
             "INSERT INTO endereco (cliente_id, rua, numero, bairro, cidade, estado, cep) VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_POR_CLIENTE =
             "SELECT id, rua, numero, bairro, cidade, estado, cep FROM endereco WHERE cliente_id = ? ORDER BY id";
+    private static final String UPDATE =
+            "UPDATE endereco SET rua = ?, numero = ?, bairro = ?, cidade = ?, estado = ?, cep = ? WHERE id = ?";
     private static final String DELETE =
             "DELETE FROM endereco WHERE id = ?";
 
@@ -47,6 +49,19 @@ class EnderecoDAOJdbc {
             }
         }
         return enderecos;
+    }
+
+    void atualizar(Connection conn, Endereco endereco) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(UPDATE)) {
+            ps.setString(1, endereco.getRua());
+            ps.setString(2, endereco.getNumero());
+            ps.setString(3, endereco.getBairro());
+            ps.setString(4, endereco.getCidade());
+            ps.setString(5, endereco.getEstado());
+            ps.setString(6, endereco.getCep());
+            ps.setInt(7, endereco.getId());
+            ps.executeUpdate();
+        }
     }
 
     void remover(Connection conn, int enderecoId) throws SQLException {

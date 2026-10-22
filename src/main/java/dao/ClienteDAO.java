@@ -10,6 +10,8 @@ public interface ClienteDAO extends DAO<Cliente, String> {
 
     void adicionarEndereco(String documento, Endereco endereco) throws SQLException;
 
+    void atualizarEndereco(Endereco endereco) throws SQLException;
+
     void removerEndereco(int enderecoId) throws SQLException;
 
     Cliente buscarPorEndereco(int enderecoId) throws SQLException;

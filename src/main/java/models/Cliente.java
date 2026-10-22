@@ -58,6 +58,26 @@ public class Cliente {
         enderecos.add(endereco);
     }
 
+    public Endereco atualizarEndereco(int enderecoId, Endereco novo) {
+        Validador.exigirNaoNulo(novo, "O endereço é obrigatório.");
+        Endereco atual = buscarEndereco(enderecoId);
+        if (atual == null) {
+            throw new IllegalArgumentException("Endereço não encontrado para este cliente.");
+        }
+        for (Endereco existente : enderecos) {
+            if (existente != atual && existente.formatar().equalsIgnoreCase(novo.formatar())) {
+                throw new IllegalArgumentException("Este endereço já está cadastrado para o cliente.");
+            }
+        }
+        atual.setRua(novo.getRua());
+        atual.setNumero(novo.getNumero());
+        atual.setBairro(novo.getBairro());
+        atual.setCidade(novo.getCidade());
+        atual.setEstado(novo.getEstado());
+        atual.setCep(novo.getCep());
+        return atual;
+    }
+
     public void removerEndereco(int enderecoId) {
         Endereco endereco = buscarEndereco(enderecoId);
         if (endereco == null) {

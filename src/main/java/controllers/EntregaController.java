@@ -105,11 +105,10 @@ public class EntregaController extends ControllerBase {
     }
 
     private void salvar(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String codigo = req.getParameter("codigo");
         try {
             int origemId = lerInteiro(req.getParameter("origem"), "Endereço de origem");
             int destinoId = lerInteiro(req.getParameter("destino"), "Endereço de destino");
-            Entrega entrega = service.cadastrar(codigo, origemId, destinoId);
+            Entrega entrega = service.cadastrar(origemId, destinoId);
             voltarAoDetalhe(req, resp, entrega.getCodigo(),
                     "Entrega cadastrada! Agora adicione os produtos.", false);
         } catch (IllegalArgumentException | ServiceException e) {

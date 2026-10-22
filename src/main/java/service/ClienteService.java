@@ -56,6 +56,16 @@ public class ClienteService extends ServiceBase<Cliente, String, ClienteDAO> {
         }
     }
 
+    public void editarEndereco(String documento, int enderecoId, Endereco endereco) {
+        Cliente cliente = buscarExistente(somenteDigitos(documento));
+        Endereco atualizado = cliente.atualizarEndereco(enderecoId, endereco);
+        try {
+            dao.atualizarEndereco(atualizado);
+        } catch (SQLException e) {
+            throw new ServiceException("Erro ao atualizar endereço.", e);
+        }
+    }
+
     public void removerEndereco(String documento, int enderecoId) {
         Cliente cliente = buscarExistente(somenteDigitos(documento));
         cliente.removerEndereco(enderecoId);

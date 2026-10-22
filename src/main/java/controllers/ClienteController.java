@@ -1,6 +1,8 @@
 package controllers;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -24,6 +26,8 @@ public class ClienteController extends ControllerBase {
         } else if ("editar".equals(acao)) {
             req.setAttribute("edicao", true);
             mostrarCliente(req, resp, "clientes/form.jsp");
+        } else if ("editarEndereco".equals(acao)) {
+            editarEndereco(req, resp);
         } else if ("detalhe".equals(acao)) {
             mostrarCliente(req, resp, "clientes/detalhe.jsp");
         } else {
@@ -42,6 +46,8 @@ public class ClienteController extends ControllerBase {
             adicionarEndereco(req, resp);
         } else if ("removerEndereco".equals(acao)) {
             removerEndereco(req, resp);
+        } else if ("salvarEndereco".equals(acao)) {
+            salvarEndereco(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Ação inválida.");
         }
@@ -112,6 +118,54 @@ public class ClienteController extends ControllerBase {
             req.setAttribute("erro", e.getMessage());
             req.setAttribute("form", req.getParameterMap());
             mostrarCliente(req, resp, "clientes/detalhe.jsp");
+        }
+    }
+
+    private void editarEndereco(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String documento = req.getParameter("documento");
+        try {
+            Cliente cliente = service.buscarPorDocumento(documento);
+            Endereco endereco = cliente == null
+                    ? null : cliente.buscarEndereco(lerInteiro(req.getParameter("enderecoId"), "Endereço"));
+            if (endereco == null) {
+                redirecionar(req, resp, "/clientes", "Endereço não encontrado.", true);
+                return;
+            }
+            Map<String, String[]> form = new HashMap<>();
+            form.put("rua", new String[] {endereco.getRua()});
+            form.put("numero", new String[] {endereco.getNumero()});
+            form.put("bairro", new String[] {endereco.getBairro()});
+            form.put("cep", new String[] {endereco.getCep().replaceAll("\\D", "")});
+            form.put("cidade", new String[] {endereco.getCidade()});
+            form.put("estado", new String[] {endereco.getEstado()});
+            req.setAttribute("cliente", cliente);
+            req.setAttribute("enderecoId", endereco.getId());
+            req.setAttribute("form", form);
+            mostrar(req, resp, "clientes/enderecoForm.jsp");
+        } catch (IllegalArgumentException | ServiceException e) {
+            redirecionar(req, resp, "/clientes", e.getMessage(), true);
+        }
+    }
+
+    private void salvarEndereco(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String documento = req.getParameter("documento");
+        try {
+            int enderecoId = lerInteiro(req.getParameter("enderecoId"), "Endereço");
+            service.editarEndereco(documento, enderecoId, lerEndereco(req));
+            redirecionar(req, resp, "/clientes?acao=detalhe&documento=" + url(documento),
+                    "Endereço atualizado com sucesso!", false);
+        } catch (IllegalArgumentException | ServiceException e) {
+            req.setAttribute("erro", e.getMessage());
+            req.setAttribute("form", req.getParameterMap());
+            req.setAttribute("enderecoId", req.getParameter("enderecoId"));
+            try {
+                req.setAttribute("cliente", service.buscarPorDocumento(documento));
+                mostrar(req, resp, "clientes/enderecoForm.jsp");
+            } catch (IllegalArgumentException | ServiceException ex) {
+                redirecionar(req, resp, "/clientes", ex.getMessage(), true);
+            }
         }
     }
 

@@ -26,6 +26,7 @@
         <tr>
             <td><c:out value="${end.formatar()}"/></td>
             <td class="acoes">
+                <a href="${ctx}/clientes?acao=editarEndereco&amp;documento=${cliente.documento}&amp;enderecoId=${end.id}">Editar</a>
                 <form method="post" action="${ctx}/clientes" onsubmit="return confirm('Remover este endereço?');">
                     <input type="hidden" name="acao" value="removerEndereco">
                     <input type="hidden" name="documento" value="${cliente.documento}">

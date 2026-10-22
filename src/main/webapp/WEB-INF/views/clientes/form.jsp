@@ -31,6 +31,16 @@
         <p class="dica">Outros endereços podem ser adicionados depois, na página do cliente.</p>
     </c:if>
 
+    <c:if test="${edicao}">
+        <h3>Endereços</h3>
+        <ul>
+            <c:forEach var="end" items="${cliente.enderecos}">
+                <li><c:out value="${end.formatar()}"/>
+                    &mdash; <a href="${ctx}/clientes?acao=editarEndereco&amp;documento=${cliente.documento}&amp;enderecoId=${end.id}">Editar</a></li>
+            </c:forEach>
+        </ul>
+    </c:if>
+
     <div class="botoes">
         <button type="submit" class="botao">Salvar</button>
         <a href="${ctx}/clientes">Cancelar</a>
