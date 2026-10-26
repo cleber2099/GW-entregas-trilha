@@ -15,4 +15,5 @@
     </div>
 </form>
 
+<%@ include file="/WEB-INF/views/clientes/mascaras.jspf" %>
 <%@ include file="/WEB-INF/views/rodape.jspf" %>

@@ -30,6 +30,12 @@
                     <td class="num">${cli.enderecos.size()}</td>
                     <td class="acoes">
                         <a href="${ctx}/clientes?acao=detalhe&amp;documento=${cli.documento}">Abrir</a>
+                        <a href="${ctx}/clientes?acao=editar&amp;documento=${cli.documento}">Editar</a>
+                        <form method="post" action="${ctx}/clientes" onsubmit="return confirm('Excluir este cliente e os endereços dele?');">
+                            <input type="hidden" name="acao" value="remover">
+                            <input type="hidden" name="documento" value="${cli.documento}">
+                            <button type="submit" class="link perigo">Excluir</button>
+                        </form>
                     </td>
                 </tr>
             </c:forEach>

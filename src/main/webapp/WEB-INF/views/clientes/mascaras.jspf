@@ -1,0 +1,75 @@
+<%@ page pageEncoding="UTF-8" %>
+<script>
+(function () {
+    var mascaras = {
+        documento: function (d) {
+            if (d.length <= 11) {
+                return d.replace(/^(\d{3})(\d)/, '$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+                        .replace(/\.(\d{3})(\d)/, '.$1-$2');
+            }
+            return d.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                    .replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+        },
+        telefone: function (d) {
+            return d.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4,5})(\d{4})$/, '$1-$2');
+        },
+        cep: function (d) {
+            return d.replace(/^(\d{5})(\d)/, '$1-$2');
+        }
+    };
+    function digitosIguais(d) { return /^(\d)\1+$/.test(d); }
+    function dv(d, n, pesos) {
+        var soma = 0;
+        for (var i = 0; i < n; i++) soma += +d[i] * pesos[i];
+        return soma;
+    }
+    var validadores = {
+        documento: function (d) {
+            if (d.length === 11) {
+                if (digitosIguais(d)) return 'CPF inválido.';
+                var r1 = dv(d, 9, [10, 9, 8, 7, 6, 5, 4, 3, 2]) * 10 % 11 % 10;
+                var r2 = dv(d, 10, [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]) * 10 % 11 % 10;
+                return r1 === +d[9] && r2 === +d[10] ? '' : 'CPF inválido.';
+            }
+            if (d.length === 14) {
+                if (digitosIguais(d)) return 'CNPJ inválido.';
+                var a = dv(d, 12, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) % 11;
+                var b = dv(d, 13, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) % 11;
+                return (a < 2 ? 0 : 11 - a) === +d[12] && (b < 2 ? 0 : 11 - b) === +d[13] ? '' : 'CNPJ inválido.';
+            }
+            return 'Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).';
+        },
+        telefone: function (d) {
+            return d.length === 10 || d.length === 11 ? '' : 'Telefone com DDD, 10 ou 11 dígitos.';
+        },
+        cep: function (d) {
+            return d.length === 8 && !/^0+$/.test(d) ? '' : 'CEP inválido.';
+        }
+    };
+    var limites = {documento: 14, telefone: 11, cep: 8};
+    var campos = [];
+    Object.keys(mascaras).forEach(function (nome) {
+        var el = document.querySelector('input[name="' + nome + '"]');
+        if (!el || el.type === 'hidden') return;
+        campos.push(el);
+        el.removeAttribute('pattern');
+        el.removeAttribute('maxlength');
+        el.oninput = null;
+        var aplicar = function () {
+            var d = el.value.replace(/\D/g, '').slice(0, limites[nome]);
+            el.value = mascaras[nome](d);
+            el.setCustomValidity(el.readOnly ? '' : validadores[nome](d));
+        };
+        el.addEventListener('input', aplicar);
+        aplicar();
+    });
+    campos.forEach(function (el) {
+        var form = el.form;
+        if (form.dataset.mascara) return;
+        form.dataset.mascara = '1';
+        form.addEventListener('submit', function () {
+            campos.forEach(function (c) { c.value = c.value.replace(/\D/g, ''); });
+        });
+    });
+})();
+</script>

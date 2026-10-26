@@ -3,19 +3,18 @@ package service;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import dao.DAOFactory;
 import dao.EntregaDAO;
 import models.Cliente;
 import models.Produto;
 import models.entrega.Entrega;
 import util.Validador;
 
-public class EntregaService extends ServiceBase<Entrega, String, EntregaDAO> {
+public class EntregaService extends ServiceBase<Entrega, EntregaDAO> {
     private final ClienteService clienteService;
     private final ProdutoService produtoService;
 
     public EntregaService() {
-        this(DAOFactory.criarEntregaDAO(), new ClienteService(), new ProdutoService());
+        this(new EntregaDAO(), new ClienteService(), new ProdutoService());
     }
 
     public EntregaService(EntregaDAO dao, ClienteService clienteService, ProdutoService produtoService) {
@@ -106,7 +105,7 @@ public class EntregaService extends ServiceBase<Entrega, String, EntregaDAO> {
 
     private void salvarStatus(Entrega entrega) {
         try {
-            dao.atualizarStatus(entrega);
+            dao.atualizar(entrega);
         } catch (SQLException e) {
             throw new ServiceException("Erro ao atualizar o status da entrega.", e);
         }

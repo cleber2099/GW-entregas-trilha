@@ -10,7 +10,7 @@ import java.util.List;
 import db.ConnectionFactory;
 import models.Produto;
 
-public class ProdutoDAOJdbc implements ProdutoDAO {
+public class ProdutoDAO implements DAO<Produto> {
     private static final String COLUNAS = "SELECT codigo, nome, peso, volume, valor, estoque FROM produto ";
 
     private static final String INSERT =

@@ -12,7 +12,7 @@ import models.Cliente;
 import models.Produto;
 import models.entrega.Entrega;
 
-public class EntregaDAOJdbc implements EntregaDAO {
+public class EntregaDAO implements DAO<Entrega> {
     private static final String SELECT =
             "SELECT e.id, e.codigo, e.status, e.endereco_origem_id, e.endereco_destino_id, "
             + "o.cliente_id AS remetente_id, d.cliente_id AS destinatario_id "
@@ -54,7 +54,7 @@ public class EntregaDAOJdbc implements EntregaDAO {
             "UPDATE produto p SET estoque = p.estoque + i.quantidade FROM item_entrega i "
             + "WHERE i.produto_id = p.id AND i.entrega_id = ?";
 
-    private final ClienteDAOJdbc clienteDAO = new ClienteDAOJdbc();
+    private final ClienteDAO clienteDAO = new ClienteDAO();
 
     @Override
     public void salvar(Entrega entrega) throws SQLException {
@@ -91,7 +91,6 @@ public class EntregaDAOJdbc implements EntregaDAO {
         return entregas;
     }
 
-    @Override
     public void adicionarItem(String codigoEntrega, Produto produto, int quantidade) throws SQLException {
         emTransacao(codigoEntrega, (conn, entregaId) -> {
             executar(conn, BAIXAR_ESTOQUE, quantidade, produto.getCodigo());
@@ -99,7 +98,6 @@ public class EntregaDAOJdbc implements EntregaDAO {
         });
     }
 
-    @Override
     public void removerItem(String codigoEntrega, String codigoProduto) throws SQLException {
         emTransacao(codigoEntrega, (conn, entregaId) -> {
             executar(conn, DEVOLVER_ESTOQUE_DO_ITEM, entregaId, codigoProduto);
@@ -108,12 +106,11 @@ public class EntregaDAOJdbc implements EntregaDAO {
     }
 
     @Override
-    public void atualizarStatus(Entrega entrega) throws SQLException {
+    public void atualizar(Entrega entrega) throws SQLException {
         emTransacao(entrega.getCodigo(), (conn, entregaId) ->
                 executar(conn, UPDATE_STATUS, entrega.getStatus().name(), entregaId));
     }
 
-    @Override
     public void cancelar(String codigoEntrega) throws SQLException {
         emTransacao(codigoEntrega, (conn, entregaId) -> {
             executar(conn, DEVOLVER_ESTOQUE_DE_TODOS, entregaId);

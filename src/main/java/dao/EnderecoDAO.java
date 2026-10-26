@@ -10,7 +10,7 @@ import java.util.List;
 
 import models.Endereco;
 
-class EnderecoDAOJdbc {
+class EnderecoDAO {
     private static final String INSERT =
             "INSERT INTO endereco (cliente_id, rua, numero, bairro, cidade, estado, cep) VALUES (?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_POR_CLIENTE =

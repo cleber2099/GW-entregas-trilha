@@ -5,7 +5,7 @@ import java.util.List;
 
 import dao.DAO;
 
-public abstract class ServiceBase<T, K, D extends DAO<T, K>> {
+public abstract class ServiceBase<T, D extends DAO<T>> {
     protected final D dao;
     private final String nome;
     private final String mensagemNaoEncontrado;
@@ -24,7 +24,7 @@ public abstract class ServiceBase<T, K, D extends DAO<T, K>> {
         }
     }
 
-    protected T buscarPorChave(K chave) {
+    protected T buscarPorChave(String chave) {
         try {
             return dao.buscarPorChave(chave);
         } catch (SQLException e) {
@@ -32,7 +32,7 @@ public abstract class ServiceBase<T, K, D extends DAO<T, K>> {
         }
     }
 
-    protected T buscarExistente(K chave) {
+    protected T buscarExistente(String chave) {
         T entidade = buscarPorChave(chave);
         if (entidade == null) {
             throw new IllegalArgumentException(mensagemNaoEncontrado);
@@ -40,7 +40,7 @@ public abstract class ServiceBase<T, K, D extends DAO<T, K>> {
         return entidade;
     }
 
-    protected void cadastrarNovo(T entidade, K chave, String mensagemDuplicado) {
+    protected void cadastrarNovo(T entidade, String chave, String mensagemDuplicado) {
         try {
             if (dao.buscarPorChave(chave) != null) {
                 throw new IllegalArgumentException(mensagemDuplicado);
@@ -51,7 +51,7 @@ public abstract class ServiceBase<T, K, D extends DAO<T, K>> {
         }
     }
 
-    protected void removerPorChave(K chave, String mensagemErro) {
+    protected void removerPorChave(String chave, String mensagemErro) {
         try {
             if (!dao.remover(chave)) {
                 throw new IllegalArgumentException(mensagemNaoEncontrado);

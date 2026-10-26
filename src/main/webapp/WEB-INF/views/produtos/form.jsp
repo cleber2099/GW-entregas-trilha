@@ -14,24 +14,24 @@
     <input type="hidden" name="edicao" value="${edicao ? 'true' : 'false'}">
 
     <label>Código
-        <input type="text" name="codigo" required maxlength="30"
+        <input type="text" name="codigo" placeholder="Ex.: PROD-001" required maxlength="30"
                value="<c:out value='${vCodigo}'/>" ${edicao ? 'readonly' : 'autofocus'}>
     </label>
     <label>Nome
-        <input type="text" name="nome" required maxlength="150" value="<c:out value='${vNome}'/>">
+        <input type="text" name="nome" placeholder="Nome do produto" required maxlength="150" value="<c:out value='${vNome}'/>">
     </label>
     <div class="linha">
         <label>Peso (kg)
-            <input type="text" name="peso" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vPeso}'/>">
+            <input type="text" name="peso" placeholder="Ex.: 1,5" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vPeso}'/>">
         </label>
         <label>Volume (m³)
-            <input type="text" name="volume" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vVolume}'/>">
+            <input type="text" name="volume" placeholder="Ex.: 0,02" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vVolume}'/>">
         </label>
         <label>Valor (R$)
-            <input type="text" name="valor" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vValor}'/>">
+            <input type="text" name="valor" placeholder="Ex.: 29,90" required inputmode="decimal" oninput="this.value=this.value.replace(/[^\d.,]/g,'')" value="<c:out value='${vValor}'/>">
         </label>
         <label>Estoque (unidades)
-            <input type="number" name="estoque" required min="0" step="1" value="<c:out value='${vEstoque}'/>">
+            <input type="number" name="estoque" placeholder="Ex.: 100" required min="0" step="1" value="<c:out value='${vEstoque}'/>">
         </label>
     </div>
     <p class="dica">O valor fica gravado em cada entrega no momento em que o produto é adicionado;

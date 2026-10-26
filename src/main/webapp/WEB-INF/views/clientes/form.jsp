@@ -11,17 +11,17 @@
     <input type="hidden" name="edicao" value="${edicao ? 'true' : 'false'}">
 
     <label>Nome
-        <input type="text" name="nome" required maxlength="150" value="<c:out value='${vNome}'/>" autofocus>
+        <input type="text" name="nome" placeholder="Nome completo ou razão social" required maxlength="150" value="<c:out value='${vNome}'/>" autofocus>
     </label>
     <div class="linha">
         <label>CPF/CNPJ
-            <input type="text" name="documento" required maxlength="14" inputmode="numeric"
+            <input type="text" name="documento" placeholder="000.000.000-00 ou 00.000.000/0000-00" required maxlength="14" inputmode="numeric"
                    pattern="\d{11}|\d{14}" title="CPF com 11 dígitos ou CNPJ com 14 dígitos (somente números)"
                    oninput="this.value=this.value.replace(/\D/g,'')"
                    value="<c:out value='${vDocumento}'/>" ${edicao ? 'readonly' : ''}>
         </label>
         <label>Telefone
-            <input type="text" name="telefone" required maxlength="11" inputmode="numeric" pattern="\d{10,11}" title="DDD + número, 10 ou 11 dígitos (somente números)" oninput="this.value=this.value.replace(/\D/g,'')" value="<c:out value='${vTelefone}'/>">
+            <input type="text" name="telefone" placeholder="(00) 00000-0000" required maxlength="11" inputmode="numeric" pattern="\d{10,11}" title="DDD + número, 10 ou 11 dígitos (somente números)" oninput="this.value=this.value.replace(/\D/g,'')" value="<c:out value='${vTelefone}'/>">
         </label>
     </div>
 
@@ -47,4 +47,5 @@
     </div>
 </form>
 
+<%@ include file="/WEB-INF/views/clientes/mascaras.jspf" %>
 <%@ include file="/WEB-INF/views/rodape.jspf" %>

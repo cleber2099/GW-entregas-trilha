@@ -3,15 +3,14 @@ package service;
 import java.sql.SQLException;
 
 import dao.ClienteDAO;
-import dao.DAOFactory;
 import models.Cliente;
 import models.Endereco;
 import util.Validador;
 
-public class ClienteService extends ServiceBase<Cliente, String, ClienteDAO> {
+public class ClienteService extends ServiceBase<Cliente, ClienteDAO> {
 
     public ClienteService() {
-        this(DAOFactory.criarClienteDAO());
+        this(new ClienteDAO());
     }
 
     public ClienteService(ClienteDAO dao) {

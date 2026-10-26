@@ -63,11 +63,7 @@ public class Endereco {
     }
 
     public void setCep(String cep) {
-        Validador.exigirTexto(cep, "O CEP é obrigatório.");
-        String digitos = cep.replaceAll("\\D", "");
-        if (digitos.length() != 8) {
-            throw new IllegalArgumentException("O CEP deve conter 8 dígitos.");
-        }
+        Validador.exigirCep(cep);
         this.cep = cep;
     }
 

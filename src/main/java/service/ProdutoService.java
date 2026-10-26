@@ -2,15 +2,14 @@ package service;
 
 import java.sql.SQLException;
 
-import dao.DAOFactory;
 import dao.ProdutoDAO;
 import models.Produto;
 import util.Validador;
 
-public class ProdutoService extends ServiceBase<Produto, String, ProdutoDAO> {
+public class ProdutoService extends ServiceBase<Produto, ProdutoDAO> {
 
     public ProdutoService() {
-        this(DAOFactory.criarProdutoDAO());
+        this(new ProdutoDAO());
     }
 
     public ProdutoService(ProdutoDAO dao) {

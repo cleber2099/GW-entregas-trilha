@@ -18,6 +18,18 @@ public class Cliente {
         setDocumento(documento);
     }
 
+    private Cliente() {
+    }
+
+    /** Reconstrói um cliente já gravado, sem revalidar o documento (dados anteriores à validação de CPF/CNPJ). */
+    public static Cliente carregar(String nome, String telefone, String documento) {
+        Cliente cliente = new Cliente();
+        cliente.setNome(nome);
+        cliente.setTelefone(telefone);
+        cliente.documento = documento.replaceAll("\\D", "");
+        return cliente;
+    }
+
     public String getNome() {
         return nome;
     }

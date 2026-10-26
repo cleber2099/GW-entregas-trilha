@@ -12,7 +12,7 @@ import db.ConnectionFactory;
 import models.Cliente;
 import models.Endereco;
 
-public class ClienteDAOJdbc implements ClienteDAO {
+public class ClienteDAO implements DAO<Cliente> {
     private static final String SELECT =
             "SELECT id, nome, telefone, documento FROM cliente ";
 
@@ -31,7 +31,7 @@ public class ClienteDAOJdbc implements ClienteDAO {
     private static final String DELETE =
             "DELETE FROM cliente WHERE documento = ?";
 
-    private final EnderecoDAOJdbc enderecoDAO = new EnderecoDAOJdbc();
+    private final EnderecoDAO enderecoDAO = new EnderecoDAO();
 
     @Override
     public void salvar(Cliente cliente) throws SQLException {
@@ -67,7 +67,6 @@ public class ClienteDAOJdbc implements ClienteDAO {
         }
     }
 
-    @Override
     public Cliente buscarPorEndereco(int enderecoId) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
             return buscarUm(conn, SELECT_POR_ENDERECO, enderecoId);
@@ -107,7 +106,6 @@ public class ClienteDAOJdbc implements ClienteDAO {
         }
     }
 
-    @Override
     public void adicionarEndereco(String documento, Endereco endereco) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
             Integer clienteId = buscarId(conn, documento);
@@ -118,14 +116,12 @@ public class ClienteDAOJdbc implements ClienteDAO {
         }
     }
 
-    @Override
     public void atualizarEndereco(Endereco endereco) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
             enderecoDAO.atualizar(conn, endereco);
         }
     }
 
-    @Override
     public void removerEndereco(int enderecoId) throws SQLException {
         try (Connection conn = ConnectionFactory.getConnection()) {
             enderecoDAO.remover(conn, enderecoId);
@@ -155,7 +151,7 @@ public class ClienteDAOJdbc implements ClienteDAO {
     }
 
     private Cliente mapear(Connection conn, ResultSet rs) throws SQLException {
-        Cliente cliente = new Cliente(
+        Cliente cliente = Cliente.carregar(
                 rs.getString("nome"),
                 rs.getString("telefone"),
                 rs.getString("documento"));
