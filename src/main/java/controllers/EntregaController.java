@@ -71,7 +71,8 @@ public class EntregaController extends ControllerBase {
 
     private void listar(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            req.setAttribute("entregas", service.listar());
+            req.setAttribute("busca", req.getParameter("busca"));
+            req.setAttribute("entregas", service.buscar(req.getParameter("busca")));
         } catch (ServiceException e) {
             req.setAttribute("erro", e.getMessage());
         }

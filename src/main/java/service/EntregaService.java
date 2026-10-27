@@ -1,7 +1,9 @@
 package service;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import dao.EntregaDAO;
 import models.Cliente;
@@ -31,6 +33,22 @@ public class EntregaService extends ServiceBase<Entrega, EntregaDAO> {
                 remetente.buscarEndereco(origemId), destinatario.buscarEndereco(destinoId));
         cadastrarNovo(entrega, entrega.getCodigo(), "Já existe uma entrega com esse código.");
         return entrega;
+    }
+
+    public List<Entrega> buscar(String termo) {
+        if (termo == null || termo.trim().isEmpty()) {
+            return listar();
+        }
+        String texto = termo.trim().toLowerCase();
+        String digitos = termo.replaceAll("\\D", "");
+        return listar().stream()
+                .filter(e -> e.getCodigo().toLowerCase().contains(texto)
+                        || e.getStatus().getDescricao().toLowerCase().contains(texto)
+                        || e.getRemetente().getNome().toLowerCase().contains(texto)
+                        || e.getDestinatario().getNome().toLowerCase().contains(texto)
+                        || (!digitos.isEmpty() && (e.getRemetente().getDocumento().contains(digitos)
+                                || e.getDestinatario().getDocumento().contains(digitos))))
+                .collect(Collectors.toList());
     }
 
     public Entrega buscarPorCodigo(String codigo) {

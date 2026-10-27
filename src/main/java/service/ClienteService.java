@@ -1,6 +1,8 @@
 package service;
 
 import java.sql.SQLException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import dao.ClienteDAO;
 import models.Cliente;
@@ -27,6 +29,19 @@ public class ClienteService extends ServiceBase<Cliente, ClienteDAO> {
     public Cliente buscarPorDocumento(String documento) {
         Validador.exigirTexto(documento, "O CPF/CNPJ é obrigatório.");
         return buscarPorChave(somenteDigitos(documento));
+    }
+
+    public List<Cliente> buscar(String termo) {
+        if (termo == null || termo.trim().isEmpty()) {
+            return listar();
+        }
+        String texto = termo.trim().toLowerCase();
+        String digitos = somenteDigitos(termo);
+        return listar().stream()
+                .filter(c -> c.getNome().toLowerCase().contains(texto)
+                        || (!digitos.isEmpty() && (c.getDocumento().contains(digitos)
+                                || somenteDigitos(c.getTelefone()).contains(digitos))))
+                .collect(Collectors.toList());
     }
 
     public Cliente editar(String documento, String nome, String telefone) {

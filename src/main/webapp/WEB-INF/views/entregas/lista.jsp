@@ -6,9 +6,15 @@
     <a class="botao" href="${ctx}/entregas?acao=novo">Nova entrega</a>
 </div>
 
+<form class="busca" method="get" action="${ctx}/entregas">
+    <input type="search" name="busca" value="<c:out value="${busca}"/>" placeholder="Buscar por código, cliente ou status">
+    <button type="submit">Buscar</button>
+    <c:if test="${not empty busca}"><a href="${ctx}/entregas">Limpar</a></c:if>
+</form>
+
 <c:choose>
     <c:when test="${empty entregas}">
-        <p class="vazio">Nenhuma entrega cadastrada.</p>
+        <p class="vazio">${empty busca ? 'Nenhuma entrega cadastrada.' : 'Nenhuma entrega encontrada para a busca.'}</p>
     </c:when>
     <c:otherwise>
         <table>

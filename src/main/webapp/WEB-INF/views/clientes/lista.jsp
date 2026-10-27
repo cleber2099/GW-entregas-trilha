@@ -6,9 +6,15 @@
     <a class="botao" href="${ctx}/clientes?acao=novo">Novo cliente</a>
 </div>
 
+<form class="busca" method="get" action="${ctx}/clientes">
+    <input type="search" name="busca" value="<c:out value="${busca}"/>" placeholder="Buscar por nome, CPF/CNPJ ou telefone">
+    <button type="submit">Buscar</button>
+    <c:if test="${not empty busca}"><a href="${ctx}/clientes">Limpar</a></c:if>
+</form>
+
 <c:choose>
     <c:when test="${empty clientes}">
-        <p class="vazio">Nenhum cliente cadastrado.</p>
+        <p class="vazio">${empty busca ? 'Nenhum cliente cadastrado.' : 'Nenhum cliente encontrado para a busca.'}</p>
     </c:when>
     <c:otherwise>
         <table>
@@ -29,8 +35,7 @@
                     <td><c:out value="${cli.telefone}"/></td>
                     <td class="num">${cli.enderecos.size()}</td>
                     <td class="acoes">
-                        <a href="${ctx}/clientes?acao=detalhe&amp;documento=${cli.documento}">Abrir</a>
-                        <a href="${ctx}/clientes?acao=editar&amp;documento=${cli.documento}">Editar</a>
+                        <a href="${ctx}/clientes?acao=detalhe&amp;documento=${cli.documento}">Editar</a>
                         <form method="post" action="${ctx}/clientes" onsubmit="return confirm('Excluir este cliente e os endereços dele?');">
                             <input type="hidden" name="acao" value="remover">
                             <input type="hidden" name="documento" value="${cli.documento}">

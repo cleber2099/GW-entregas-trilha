@@ -49,8 +49,8 @@
     var limites = {documento: 14, telefone: 11, cep: 8};
     var campos = [];
     Object.keys(mascaras).forEach(function (nome) {
-        var el = document.querySelector('input[name="' + nome + '"]');
-        if (!el || el.type === 'hidden') return;
+        document.querySelectorAll('input[name="' + nome + '"]').forEach(function (el) {
+        if (el.type === 'hidden') return;
         campos.push(el);
         el.removeAttribute('pattern');
         el.removeAttribute('maxlength');
@@ -62,6 +62,7 @@
         };
         el.addEventListener('input', aplicar);
         aplicar();
+        });
     });
     campos.forEach(function (el) {
         var form = el.form;
