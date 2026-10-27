@@ -1,6 +1,18 @@
 # Sistema de Gerenciamento de Entregas
 
+> **Projeto de introdução do estágio na GW Sistemas.** Este repositório é a trilha de aprendizado proposta no início do estágio, com o objetivo de me familiarizar com as tecnologias utilizadas pela empresa (Java, Servlets/JSP, JDBC, PostgreSQL, Gradle e Tomcat) construindo uma aplicação completa do zero, seguindo o padrão MVC.
+
 Aplicação web em Java que simula o fluxo de gerenciamento de entregas de uma transportadora: cadastro de clientes, produtos, endereços e o controle do ciclo de vida de uma entrega, desde a criação até a confirmação (ou cancelamento).
+
+## Sobre o projeto
+
+Este sistema foi desenvolvido como exercício de onboarding do meu estágio na **GW Sistemas**. Por ser um projeto de aprendizado, o foco está em praticar:
+
+- organização em camadas (controllers, services, DAOs e models);
+- acesso a banco de dados relacional com JDBC e PostgreSQL;
+- construção de páginas dinâmicas com Servlets e JSP;
+- modelagem de regras de negócio no domínio (ciclo de vida da entrega, estoque, validações);
+- build com Gradle e deploy em Tomcat.
 
 ## Funcionalidades
 
